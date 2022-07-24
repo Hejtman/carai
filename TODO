@@ -1,3 +1,5 @@
 https://refactoring.guru/design-patterns/observer/python/example
 
+TODO: actuator class
+TODO: File Log format
 TODO: sudo service ezblock stop  # when starting (start it back when exiting?)
