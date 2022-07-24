@@ -1,1 +1,3 @@
 https://refactoring.guru/design-patterns/observer/python/example
+
+TODO: sudo service ezblock stop  # when starting (start it back when exiting?)
