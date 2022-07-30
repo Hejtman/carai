@@ -16,11 +16,9 @@ class Engine(Actuator):
 
 class Start(Action):
     def execute(self):
-        # TODO: real engine start action
-        self.actuator.lock.wait(timeout=self.duration)
+        pass  # TODO: real engine start action
 
 
 class Stop(Action):
     def execute(self):
-        # TODO: engine start action
-        self.lock.wait(timeout=self.duration)
+        pass  # TODO: engine start action
