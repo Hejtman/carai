@@ -43,35 +43,25 @@ class Actuator(Thread):
         self.logger.debug(f'finished putting: {action}')
 
     def run(self):
-        """ Action execution thread. """
+        """ Action execution thread. Getting and executing actions in action.priority from the queue until..."""
         self.logger.info(f'{self.__class__.__name__} thread running.')
 
         while not self.event_stop.is_set():
             with self.lock:
-                # FIXME: action context?
-                action = self.current_action = self.action_queue.get()           # queue empty > execution thread blocked (until put called from another thread)
-                self.logger.debug(f'{self.__class__.__name__} executing {action.__class__.__name__} {hex(id(self))}')
-                action.event.start = time()
+                self.current_action = self.action_queue.get()
+                with self.current_action:                                                           # action execution happens in action context __enter__
+                    execution_duration = self.current_action.event.execution - self.current_action.event.start
+                    timeout = self.current_action.duration - execution_duration
+                    self.logger.debug(f'{self.current_action.__class__.__name__} {hex(id(self.current_action))} execution took {execution_duration}s waiting {timeout}s to finish it.')
 
-                action.execute()
-
-                action.event.execution = time()
-                execution_duration = action.event.execution - action.event.start
-                timeout = action.duration - execution_duration
-                self.logger.debug(f'{self.__class__.__name__} execution of {action.__class__.__name__} {hex(id(self))} took {execution_duration}s waiting {timeout}s to finish it.')
-
-                aborted = self.lock.wait(timeout)  # wait until action duration reached (or action aborted prematurely from outer thread)
-
-                action.event.end = time()
-                duration = action.event.end - action.event.start
-                action.result = Result.ABORTED if aborted else Result.FINISHED
-                self.logger.log(logging.INFO if aborted else logging.DEBUG, f'{self.__class__.__name__} {hex(id(self))} execution of {action.__dict__} result={action.result} after {duration}s')
+                    aborted = self.lock.wait(timeout)                                               # wait until action duration reached (or action aborted prematurely from outer thread)
+                    self.current_action.result = Result.ABORTED if aborted else Result.FINISHED
 
         self.logger.info(f'{self.__class__.__name__} actuator thread ended.')
 
     def stop(self, abort_current=False):
         """ Make the "Action execution thread" to finish. """
-        self.event_stop.set()                                    # Stop getting actions from the queue.
+        self.event_stop.set()                               # Stop getting actions from the queue.
         self.action_queue.put(NoneAction())                 # Stop waiting for an action to be put into the action queue (happens when queue is empty)
         if abort_current:
             with self.lock:

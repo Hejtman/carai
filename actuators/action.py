@@ -1,3 +1,5 @@
+import logging
+from time import time
 from abc import ABC, abstractmethod
 from enum import IntEnum
 
@@ -28,6 +30,7 @@ class Action(ABC):
         self.duration: float = duration     # minimal time before another action execution allowed = execution + wait(delay) [if action execution aborted, delay is interrupted]
         self.event: Action.Event = Action.Event()
         self.result: Result = Result.NOT_SET
+        self.logger = logging.getLogger(__name__)
 
     @property
     def time_spent(self) -> float:
@@ -43,6 +46,18 @@ class Action(ABC):
 
     def __ge__(self, other):  # FIXME: +": Action" typehint when python allows (later 3.10 or 3.11)
         return self.priority >= other.priority
+
+    def __enter__(self):
+        self.logger.debug(f'{self.__class__.__name__} {hex(id(self))} executing')
+        self.event.start = time()
+        self.execute()
+        self.event.execution = time()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.event.end = time()
+        duration = self.event.end - self.event.start
+        self.logger.log(logging.INFO if self.result is Result.ABORTED else logging.DEBUG,
+                        f'{self.__class__.__name__} {hex(id(self))} execution of {self.__dict__} result={self.result} after {duration}s')
 
     @abstractmethod
     def execute(self) -> None:
