@@ -1,24 +1,30 @@
+from control.control import Control
+from sensors.battery import Battery
+from sensors.ultrasonic import Ultrasonic
 from actuators.engine import Engine
+from actuators.terminal import Terminal
 
 
 class CarAI:
     """
-    Car HW = sensors + actuators
+        HW = sensors + actuators
+        SW = sensor >DATA> control >ACTION> actuator
 
-    Artificial Intelligence:
-    * sensory read > making an decision for action > performing action
-
-    Implemented as: Producer / Consumer design pattern:
-    * Producer - produces actions based on sensory read (sensor + ai)
-    * Consumer - performs actions from the priority queue (actuator)
+        Implemented as: Producer / Consumer design pattern:
+        * Producer - produces actions based on sensory read (sensor + decision making)
+        * Consumer - performs actions from the priority queue (actuator)
     """
-
     def __init__(self):
-        """ Each actuator has his own thread to ensure only one action per actuator at any time. """
         super().__init__()
-        self.engine = Engine()
+        self.control = Control()
+        self.control.sensors = [Battery(samples=10, period=10, control=self.control),
+                                Ultrasonic(samples=10, period=0.1, control=self.control)]
+        self.control.actuators = [Terminal(), Engine()]
 
-    def start(self) -> int:
-        """ Start actuators threads. """
-        self.engine.start()
-        return 0
+    def start(self) -> None:
+        self.control.start()
+
+
+if __name__ == '__main__':
+    c = CarAI()
+    c.start()

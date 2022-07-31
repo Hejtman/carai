@@ -1,0 +1,13 @@
+from actuators.action import Action
+from actuators.actuator import Actuator
+
+
+class Terminal(Actuator):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class ShutDown(Action):
+    def execute(self):
+        print('SYSTEM SHUTTING DOWN!!!')
+        pass  # TODO: real engine start action

@@ -8,7 +8,8 @@ def main() -> int:
     t.execute_args()
 
     c = CarAI()
-    return c.start()
+    c.start()
+    return 0
 
 
 if __name__ == '__main__':

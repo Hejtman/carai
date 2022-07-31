@@ -1,5 +1,3 @@
-import logging
-
 from actuators.action import Action
 from actuators.actuator import Actuator
 
@@ -11,7 +9,8 @@ class Engine(Actuator):
     """
     def __init__(self) -> None:
         super().__init__()
-        self.logger = logging.getLogger(__name__)
+        self.speed = 0  # TODO
+        self.angle = 0  # TODO
 
 
 class Start(Action):

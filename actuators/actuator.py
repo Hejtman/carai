@@ -57,7 +57,7 @@ class Actuator(Thread):
                     aborted = self.lock.wait(timeout)                                               # wait until action duration reached (or action aborted prematurely from outer thread)
                     self.current_action.result = Result.ABORTED if aborted else Result.FINISHED
 
-        self.logger.info(f'{self.__class__.__name__} actuator thread ended.')
+        self.logger.info(f'{self.__class__.__name__} thread ended.')
 
     def stop(self, abort_current=False):
         """ Make the "Action execution thread" to finish. """
