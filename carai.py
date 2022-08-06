@@ -1,12 +1,12 @@
 from control.control import Control
-from sensors.battery import Battery
-from sensors.ultrasonic import Ultrasonic
-from actuators.engine import Engine
-from actuators.terminal import Terminal
 
 
+# TODO: Is this abstraction/file needed?  Seems that this content can be moved to main()
 class CarAI:
     """
+        This class is the highest in abstraction hierarchy to wrap all the components.
+        It is to initialise control object which handles everything on main thread and leaves nothing to pass into main().
+
         HW = sensors + actuators
         SW = sensor >DATA> control >ACTION> actuator
 
@@ -17,14 +17,11 @@ class CarAI:
     def __init__(self):
         super().__init__()
         self.control = Control()
-        self.control.sensors = [Battery(samples=10, period=10, control=self.control),
-                                Ultrasonic(samples=10, period=0.1, control=self.control)]
-        self.control.actuators = [Terminal(), Engine()]
 
-    def start(self) -> None:
-        self.control.start()
+    def main_loop(self) -> None:
+        self.control.main_loop()
 
 
 if __name__ == '__main__':
     c = CarAI()
-    c.start()
+    c.main_loop()

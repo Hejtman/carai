@@ -9,5 +9,4 @@ class Terminal(Actuator):
 
 class ShutDown(Action):
     def execute(self):
-        print('SYSTEM SHUTTING DOWN!!!')
-        pass  # TODO: real engine start action
+        print('SYSTEM SHUTTING DOWN!!!')  # TODO: real engine start action

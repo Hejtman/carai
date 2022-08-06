@@ -1,7 +1,10 @@
 import logging
 from time import time
+from threading import Condition
 from abc import ABC, abstractmethod
 from enum import IntEnum
+
+from lib.utils import who
 
 
 class Priority(IntEnum):
@@ -14,6 +17,7 @@ class Result(IntEnum):
     NOT_SET = -1
     FINISHED = 0
     ABORTED = 1
+    FAILED = 2
 
 
 class Action(ABC):
@@ -37,27 +41,37 @@ class Action(ABC):
         assert self.event.end
         return self.event.end - self.event.start
 
-    # priority comparison happens when action put into priority queue for execution
-    def __gt__(self, other):  # FIXME: +": Action" typehint when python allows (later 3.10 or 3.11)
+    # priority comparison used when action put into priority queue for execution
+    def __gt__(self, other):
         return self.priority > other.priority
 
-    def __eq__(self, other):  # FIXME: +": Action" typehint when python allows (later 3.10 or 3.11)
+    def __eq__(self, other):
         return self.priority == other.priority
 
-    def __ge__(self, other):  # FIXME: +": Action" typehint when python allows (later 3.10 or 3.11)
+    def __ge__(self, other):
         return self.priority >= other.priority
 
-    def __enter__(self):
-        self.logger.debug(f'{self.__class__.__name__} {hex(id(self))} executing')
+    def execute_wrapper(self, lock: Condition):
+        self.logger.debug(f'{who(self)} is being executed.')
         self.event.start = time()
-        self.execute()
-        self.event.execution = time()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.event.end = time()
-        duration = self.event.end - self.event.start
-        self.logger.log(logging.INFO if self.result is Result.ABORTED else logging.DEBUG,
-                        f'{self.__class__.__name__} {hex(id(self))} execution of {self.__dict__} result={self.result} after {duration}s')
+        try:
+            self.execute()
+        except:                             # LOG & FORGET: A single Action execution shall not bring down an entire Actuator
+            self.logger.exception(f'{who(self)} execution died by exception:')
+            self.result = Result.FAILED
+        else:
+            self.event.execution = time()
+            execution_duration = self.event.execution - self.event.start
+            timeout = self.duration - execution_duration
+            self.logger.debug(f'{who(self)} execution took {execution_duration}, now waiting {timeout}s to finish it.')
+
+            aborted = lock.wait(timeout)    # wait until action duration reached (or action aborted prematurely from outer thread)
+
+            self.result = Result.ABORTED if aborted else Result.FINISHED
+            self.event.end = time()
+            level = logging.DEBUG if self.result == Result.FINISHED else logging.INFO if self.result == Result.ABORTED else logging.ERROR
+            self.logger.log(level, f'{who(self)} execution of {self.__dict__} result={self.result} after {self.time_spent}s')
 
     @abstractmethod
     def execute(self) -> None:

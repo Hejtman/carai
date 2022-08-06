@@ -1,6 +1,8 @@
 from actuators.action import Action
 from actuators.actuator import Actuator
 
+from lib.utils import who
+
 
 class Engine(Actuator):
     """
@@ -15,9 +17,11 @@ class Engine(Actuator):
 
 class Start(Action):
     def execute(self):
-        pass  # TODO: real engine start action
+        self.logger.debug('Engine: start')
+        # TODO: real engine start action
 
 
 class Stop(Action):
     def execute(self):
-        pass  # TODO: engine start action
+        self.logger.debug(f'{who(self)} Engine: stop')
+        # TODO: engine start action

@@ -12,7 +12,7 @@ class TerminalLogger:
         self.file_handler = logging.FileHandler(file_path)
         self.terminal_handler = logging.StreamHandler(sys.stdout)
 
-        self.file_handler.setLevel(logging.DEBUG)
+        self.file_handler.setLevel(logging.INFO)
         self.terminal_handler.setLevel(logging.INFO)    # default settings
 
         root_logger = logging.getLogger()               # should be done only once
@@ -28,6 +28,7 @@ class TerminalLogger:
         root_logger.removeHandler(self.terminal_handler)
 
     def set_terminal_logging(self, verbosity: int) -> None:
+        self.file_handler.setLevel(level=logging.DEBUG if verbosity >= 3 else logging.INFO)
         self.terminal_handler.setLevel(level=logging.DEBUG if verbosity >= 3 else logging.INFO)
 
 
@@ -35,10 +36,9 @@ class CLI:
     """
     Common stuff for CLI APPs.
      * Parsing arguments from terminal
-     * Logging INFO into terminal
-     * Logging ALL into log file.
+     * Logging INFO level into terminal
+     * Logging INFO level into log file (DEBUG with -v option)
     """
-
     def __init__(self, log_path) -> None:
         self.logger = TerminalLogger(file_path=log_path)
         self.args = None
@@ -52,5 +52,5 @@ class CLI:
         return (getattr(self, arg)() for arg, value in self.args.__dict__.items() if value)
 
     def verbose(self) -> None:
-        if self.args.verbose >= 3:
-            self.logger.terminal_handler.setLevel(level=logging.DEBUG)
+        if self.args.verbose:
+            self.logger.file_handler.setLevel(level=logging.DEBUG)

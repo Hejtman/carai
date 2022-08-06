@@ -13,3 +13,8 @@ def wait_for_callable(f: callable, expected_value: Any, timeout: float, period: 
             return True
         time.sleep(period)
     return False
+
+
+def who(object: any) -> str:
+    """ Convenience for e.g.: logging. """
+    return f'{object.__class__.__name__} {hex(id(object))}'
