@@ -1,7 +1,7 @@
 import time
 from abc import ABC, abstractmethod
 
-from lib.threading import LoggingExceptionsThread
+from lib.threading2 import LoggingExceptionsThread
 
 
 class Sensor(LoggingExceptionsThread, ABC):

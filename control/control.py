@@ -1,13 +1,13 @@
 import logging
 import time
-from threading import Thread
 
+from actuators import engine, terminal
+from actuators.action import Priority
+# noinspection PyUnresolvedReferences
+from control import control2, control3, rc
+from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who
 from sensors import battery, ultrasonic
-from actuators import engine, terminal, action
-
-from control.control2 import Control2
-from control.control3 import Control3
 
 
 class Control:
@@ -16,11 +16,15 @@ class Control:
         Main thread object wiring all components together - car's brain.
          * On main thread is running start / stop / monitor all the car's components - each work in its own thread
          * Asynchronously (process_data from component thread) triggered EMERGENCY level decisions > FREEZE, COMA, DIE > based on sensors direct reports
+         TODO: Detect engine movement with no distance traveled (obstacle or lift)
+         TODO: Detect edge
     """
+
     def __init__(self):
-        # self                                                  # archy cortex
-        self.control2 = Control2(period=0.5, control=self)      # paleo cortex
-        self.control3 = Control3(period=1, control=self)        # neo cortex
+        # self                                                       # archy cortex
+        self.control2 = control2.Control2(period=0.5, control=self)  # paleo cortex
+        self.control3 = control3.Control3(period=1, control=self)    # neo cortex
+        self.rc = rc.RC(control=self)                                # remote control localhost web input/output
 
         # sensors
         self.battery = battery.Battery(samples=10, period=10, control=self)
@@ -31,11 +35,15 @@ class Control:
         self.engine = engine.Engine()
 
         # all above
-        self.components = [c for c in self.__dict__.values() if isinstance(c, Thread)]
+        self.components = [c for c in self.__dict__.values() if isinstance(c, LoggingExceptionsThread)]
+        assert len(self.components) == 7
 
         self.logger = logging.getLogger(__name__)
-        self.priority = action.Priority.EMERGENCY
+        self.priority = Priority.EMERGENCY
         self.watching_period = 1
+
+        # DEBUG - to limit amount of logs
+        self.battery.stop()
 
     def __enter__(self):
         self.logger.info(f'{who(self)} thread running, starting all the components:')
@@ -74,6 +82,7 @@ class Control:
         with self:
             while True:
                 # TODO: watching over sensors (and actuators processing given tasks?)
+                # noinspection PyBroadException
                 try:
                     time.sleep(self.watching_period)
                 except KeyboardInterrupt:
@@ -85,4 +94,4 @@ class Control:
     def perform(self, actuator, action, log):
         if not actuator.current_action or action != actuator.current_action:
             self.logger.critical(log)
-            actuator.put_action(action)
+            actuator.put(action)

@@ -44,7 +44,8 @@ class LoggingThread(ABC, Thread):
 class LoggingExceptionsThread(LoggingThread, ABC):
     """ LoggingThread logging + ignoring exceptions. """
     def _iterate(self):
+        # noinspection PyBroadException
         try:
             self.iterate()
         except:  # log and ignore
-            self.logger.exception(f'{who(self)} thread died by exception:')
+            self.logger.exception(f'{who(self)} thread got unhandled exception:')

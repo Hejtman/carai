@@ -43,7 +43,7 @@ class ActuatorTest(unittest.TestCase):
 
     def test_01_that_actuator_executes_given_action(self) -> None:
         action = CustomAction()
-        self.actuator.put_action(action)
+        self.actuator.put(action)
 
         self.actuator.start()
         time.sleep(0.001)
@@ -51,14 +51,14 @@ class ActuatorTest(unittest.TestCase):
 
     def test_02_that_action_is_not_executed_when_actuator_not_started(self) -> None:
         action = CustomAction()
-        self.actuator.put_action(action)
+        self.actuator.put(action)
 
         time.sleep(0.002)
         assert not action.was_executed
 
     def test_03_that_action_status_is_finished_after_execution(self) -> None:
         action = CustomAction()
-        self.actuator.put_action(action)
+        self.actuator.put(action)
         assert action.result is Result.NOT_SET
 
         self.actuator.start()
@@ -67,7 +67,7 @@ class ActuatorTest(unittest.TestCase):
 
     def test_04_that_actuator_queue_is_empty_before_and_after_execution(self) -> None:
         assert self.actuator.action_queue.empty()
-        self.actuator.put_action(CustomAction())
+        self.actuator.put(CustomAction())
         assert not self.actuator.action_queue.empty()
 
         self.actuator.start()
@@ -81,7 +81,7 @@ class ActuatorTest(unittest.TestCase):
                    ExecutionOrderTestingAction(priority=1, duration=duration),
                    ExecutionOrderTestingAction(priority=2, duration=duration)]
         for action in actions:
-            self.actuator.put_action(action)
+            self.actuator.put(action)
 
         self.actuator.start()
 
@@ -98,7 +98,7 @@ class ActuatorTest(unittest.TestCase):
                    ExecutionOrderTestingAction(priority=Priority.HIGH, duration=0),   # 1.
                    ExecutionOrderTestingAction(priority=Priority.LOW, duration=0)]    # 2.
         for action in actions:
-            self.actuator.put_action(action)
+            self.actuator.put(action)
 
         self.actuator.start()
         time.sleep(0.001)
@@ -114,7 +114,7 @@ class ActuatorTest(unittest.TestCase):
                    ExecutionOrderTestingAction(priority=Priority.HIGH, duration=0)]   # 1.
 
         for action in actions:
-            self.actuator.put_action(action)
+            self.actuator.put(action)
 
         self.actuator.start()
         time.sleep(0.001)
@@ -129,13 +129,13 @@ class ActuatorTest(unittest.TestCase):
         actions = [ExecutionOrderTestingAction(priority=Priority.LOW-1, duration=duration),  # 1. (lower number means higher priority)
                    ExecutionOrderTestingAction(priority=Priority.LOW, duration=duration)]    # 3.
         for action in actions:
-            self.actuator.put_action(action)
+            self.actuator.put(action)
 
         self.actuator.start()
 
         assert wait_for_callable(lambda: actions[0].execution_order, 1, period=duration/10, timeout=2*duration)                     # wait for first low priority action to be executed
         high_priority_action = ExecutionOrderTestingAction(priority=Priority.HIGH, duration=duration)
-        self.actuator.put_action(high_priority_action)
+        self.actuator.put(high_priority_action)
         assert all(action.result is Result.NOT_SET for action in actions)  # no action finished yet (duration period)
 
         assert wait_for_callable(lambda: actions[0].result, Result.FINISHED, period=duration/10, timeout=2*duration)                # wait for first low priority action to be finished
@@ -149,13 +149,13 @@ class ActuatorTest(unittest.TestCase):
         actions = [ExecutionOrderTestingAction(priority=Priority.LOW-1, duration=1),  # 1. (lower number means higher priority)
                    ExecutionOrderTestingAction(priority=Priority.LOW, duration=duration)]    # 3.
         for action in actions:
-            self.actuator.put_action(action)
+            self.actuator.put(action)
 
         self.actuator.start()
 
         assert wait_for_callable(lambda: actions[0].execution_order, 1, period=duration/10, timeout=2*duration)                     # wait for first low priority action to be executed
         high_priority_action = ExecutionOrderTestingAction(priority=Priority.HIGH, duration=duration)
-        self.actuator.put_action(high_priority_action, abort_current=True)
+        self.actuator.put(high_priority_action, abort_current=True)
         assert all(action.result is not Result.FINISHED for action in actions)                                                      # no action finished yet (duration period)
 
         assert wait_for_callable(lambda: actions[0].result, Result.ABORTED, period=duration/10, timeout=duration/2)                 # should be aborted (sooner than action duration)

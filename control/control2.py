@@ -1,15 +1,14 @@
 import time
-from abc import ABC, abstractmethod
 
-from lib.utils import who
-from lib.threading import LoggingExceptionsThread
-from actuators import engine, terminal, action
+from lib.threading2 import LoggingExceptionsThread
+from actuators import action
 
 
 class Control2(LoggingExceptionsThread):
     """
         Paleo Cortex.
         Periodically monitor sensors (via self.control / ArchyCortex), make NON-EMERGENCY reactions.
+        * detect: lift?
         * evasive maneuvers
         * complains: low battery (docking later), ...?
     """

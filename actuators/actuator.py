@@ -1,11 +1,9 @@
-import logging
-from enum import Enum
 from time import time
 from threading import Condition
-from queue import Queue, PriorityQueue
+from queue import PriorityQueue
 
 from actuators.action import Action, NoneAction
-from lib.threading import LoggingExceptionsThread
+from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who
 
 
@@ -21,11 +19,11 @@ class Actuator(LoggingExceptionsThread):
         self.lock = Condition()                     # for locking action execution + waiting to complete the action duration (wait() can be interrupted from outside by notify() to abort action sooner)
         self.current_action = None                  # cross-thread shard driving variable used in critical sections
 
-    def put_action(self, action: Action, abort_current=False) -> None:
+    def put(self, action: Action, abort_current=False) -> None:
         """
         This method is called from outer thread.
         All access of internal variables here is restricted to read only, except the thread-safe action_queue.put.
-        :param action: an Action instance to execute when time is right (action.priority helps with that decision)
+        :param action: Action instance to execute when time is right (action.priority helps with that decision)
         :param abort_current: abort currently executed action if it has lower priority
         :return:
         """
@@ -35,14 +33,14 @@ class Actuator(LoggingExceptionsThread):
         action.event.queued = time()
 
         if abort_current:
-            with self.lock:                                             # lock self.current_action to not abort just added (high priority) action as get runs on other thread and can happened any time
+            with self.lock:                                             # lock self.current_action to not abort just added (high priority) action as get runs on other thread and can happen any time
                 if self.current_action and self.current_action.priority > action.priority:  # higher number means lower priority >>> surly different action >>> abort it
                     self.logger.debug(f'{who(self)} notified to abort current action: {who(self.current_action)} in favor of {who(action)}.')
                     self.lock.notify()
         self.logger.debug(f'finished putting: {action}')
 
     def iterate(self):
-        """ This method gets repeatedly called (while Actuator's thread lives) for getting and executing actions (in action.priority order) from the action_queue. """
+        """ This method gets repeatedly called (while Actuator's thread lives) for getting and executing actions (in action priority order) from the action_queue. """
         with self.lock:
             self.current_action = self.action_queue.get()
             self.logger.debug(f'{who(self)}: getting new action for execution {who(self.current_action)}')

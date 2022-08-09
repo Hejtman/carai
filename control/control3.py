@@ -3,8 +3,9 @@ import random
 from enum import Enum
 
 from lib.utils import who
-from lib.threading import LoggingExceptionsThread
-from actuators import engine, action
+from lib.threading2 import LoggingExceptionsThread
+from actuators import engine
+from actuators.action import Priority, Result
 
 
 class Mood(Enum):
@@ -17,6 +18,7 @@ class Control3(LoggingExceptionsThread):
         Neo Cortex.
         Periodically monitor sensors (via self.control / ArchyCortex) and make LOW-PRIORITY decisions based on higher cognitive functions:
         * camera, speech, ...
+        Remember traveled distance and try to perform reverse.
     """
     def __init__(self, period, control) -> None:
         super().__init__()
@@ -24,7 +26,7 @@ class Control3(LoggingExceptionsThread):
         self._current_action = None
         self._control = control
         self._mood = Mood.IDLE
-        self.priority = action.Priority.LOW
+        self.priority = Priority.LOW
 
     def iterate(self):
         start_time = time.time()
@@ -42,6 +44,8 @@ class Control3(LoggingExceptionsThread):
             case Mood.IDLE:
                 return random.choices([Mood.IDLE, Mood.EXPLORE], weights=[9, 1])[0]  # 10% chance to start explore
             case Mood.EXPLORE:
+                if self._current_action.result == Result.ABORTED:
+                    return Mood.IDLE                                                 # TODO: try reverse the failed action?
                 return random.choices([Mood.IDLE, Mood.EXPLORE], weights=[1, 9])[0]  # 10% chance to stop explore
             case _:
                 print(self._mood)
@@ -57,9 +61,6 @@ class Control3(LoggingExceptionsThread):
                 assert False
 
     def explore(self):
-        # TODO: random? direction
-        if not self._current_action or self._current_action.result == action.Result.FINISHED:
-            self._current_action = engine.Start(self.priority, self.period)
-            self._control.perform(self._control.engine, self._current_action, f'Exploring: driving forward for {self.period}s.')
-        else:
-            print(f'xxxxxxxxxxxx{self._current_action.result}')
+        # TODO: change direction somehow smart
+        self._current_action = engine.Start(self.priority, self.period)
+        self._control.perform(self._control.engine, self._current_action, f'Exploring: driving forward for {self.period}s.')

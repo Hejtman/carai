@@ -1,4 +1,4 @@
-#from statistic import mode
+# TODO: from statistic import mode
 from sensors.sensor import Sensor
 from lib.utils import who
 

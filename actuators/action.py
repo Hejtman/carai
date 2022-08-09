@@ -55,6 +55,7 @@ class Action(ABC):
         self.logger.debug(f'{who(self)} is being executed.')
         self.event.start = time()
 
+        # noinspection PyBroadException
         try:
             self.execute()
         except:                             # LOG & FORGET: A single Action execution shall not bring down an entire Actuator
