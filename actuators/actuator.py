@@ -21,11 +21,10 @@ class Actuator(LoggingExceptionsThread):
 
     def put(self, action: Action, abort_current=False) -> None:
         """
-        This method is called from outer thread.
-        All access of internal variables here is restricted to read only, except the thread-safe action_queue.put.
-        :param action: Action instance to execute when time is right (action.priority helps with that decision)
-        :param abort_current: abort currently executed action if it has lower priority
-        :return:
+            This method is called from outer thread.
+            All access of internal variables here is restricted to read only, except the thread-safe action_queue.put.
+            :param action: Action instance to execute when time is right (action.priority helps with that decision)
+            :param abort_current: abort currently executed action if it has lower priority
         """
         self.logger.debug(f'started putting: {action}')
 
@@ -39,7 +38,7 @@ class Actuator(LoggingExceptionsThread):
                     self.lock.notify()
         self.logger.debug(f'finished putting: {action}')
 
-    def iterate(self):
+    def iterate(self) -> None:
         """ This method gets repeatedly called (while Actuator's thread lives) for getting and executing actions (in action priority order) from the action_queue. """
         with self.lock:
             self.current_action = self.action_queue.get()
@@ -47,10 +46,15 @@ class Actuator(LoggingExceptionsThread):
             self.current_action.execute_wrapper(self.lock)  # actuator's lock needed for waiting given action.duration (also lock might get notify to abort the execution)
             self.current_action = None
 
-    def stop(self, abort_current=False):
+    def stop(self, abort_current=False) -> None:
         """ Make the "Action execution thread" to finish. """
         super().stop()                                      # iterate() won't be called again. That will stop getting new actions from the queue.
         self.action_queue.put(NoneAction())                 # Stop waiting for an action to be put into the action queue (happens when queue is empty)
         if abort_current:
             with self.lock:
                 self.lock.notify()                          # make "self.lock.wait(timeout)" to abort before timeout
+
+    @property
+    def state(self) -> str:
+        """ This method is called from outer thread. Variables might change asynchronously. """
+        return '✅' if self.current_action is None else f'{self.current_action.__class__.__name__} {str(self.action_queue.queue)}'

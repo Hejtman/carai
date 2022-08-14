@@ -1,3 +1,4 @@
+import time
 import logging
 from threading import Thread, Event
 from abc import ABC, abstractmethod
@@ -5,7 +6,7 @@ from abc import ABC, abstractmethod
 from lib.utils import who
 
 
-class LoggingThread(ABC, Thread):
+class LoggingThread(Thread, ABC):
     """
         Extends standard Thread for logging thread's: start, stop and dying by exception.
         Adds graceful way to stop the thread (via calling stop() method as the Thread start() counterpart).
@@ -49,3 +50,23 @@ class LoggingExceptionsThread(LoggingThread, ABC):
             self.iterate()
         except:  # log and ignore
             self.logger.exception(f'{who(self)} thread got unhandled exception:')
+
+
+class ComponentThread(LoggingExceptionsThread, ABC):
+    """ LoggingExceptionsThread + state """
+    def __init__(self, period) -> None:
+        super().__init__()
+        self.period = period
+        self.last_iteration_time: float = 0
+
+    def _iterate(self):
+        # noinspection PyBroadException
+        try:
+            self.last_iteration_time = time.time()
+            self.iterate()
+        except:  # log and ignore
+            self.logger.exception(f'{who(self)} thread got unhandled exception:')
+
+    @property
+    def state(self) -> str:
+        return '✅' if time.time() - self.last_iteration_time <= self.period else '❌'

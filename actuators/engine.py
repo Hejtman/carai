@@ -13,15 +13,27 @@ class Engine(Actuator):
         super().__init__()
         self.speed = 0  # TODO
         self.angle = 0  # TODO
+        # TODO: current_action
+        # TODO: previous action
 
 
 class Start(Action):
-    def execute(self):
+    def execute(self) -> None:
         self.logger.debug('Engine: start')
         # TODO: real engine start action
 
 
 class Stop(Action):
-    def execute(self):
+    def execute(self) -> None:
         self.logger.debug(f'{who(self)} Engine: stop')
         # TODO: engine start action
+
+
+class SpeedUP(Action):
+    def execute(self) -> None:
+        self.logger.debug(f'{who(self)} Engine: Speeding UP')
+
+
+class SlowDown(Action):  # TODO: negative / reverse?
+    def execute(self) -> None:
+        self.logger.debug(f'{who(self)} Engine: Slowing DOWN')

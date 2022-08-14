@@ -8,6 +8,10 @@ class Battery(Sensor):
         value = 0  # FIX ME
         return value
 
+    @property
+    def state(self) -> str:
+        return f'{super(Sensor, self).state} {self.value}V'
+
 
 BATTERIES = 3                        # using 3 LIFEPO4 batteries
 NORMAL_VOLTAGE = 3.2 * BATTERIES     # https://batteryfinds.com/whats-lifepo4-over-discharge-lifepo4-overcharge/

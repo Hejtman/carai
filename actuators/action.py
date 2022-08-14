@@ -23,13 +23,13 @@ class Result(IntEnum):
 class Action(ABC):
     class Event:
         """ Timestamps container. Set by Actuator while processing the action. """
-        def __init__(self):
+        def __init__(self) -> None:
             self.queued: float = 0          # put into actuators action queue
             self.start: float = 0           # execution started
             self.execution: float = 0       # execution finished
             self.end: float = 0             # aborted or action duration time reached > task result set  > actuator freed to start execution of another action (from action priority queue)
 
-    def __init__(self, priority: int, duration: float):
+    def __init__(self, priority: int, duration: float) -> None:
         self.priority: int = priority       # for sorting on actuators action_priority_queue
         self.duration: float = duration     # minimal time before another action execution allowed = execution + wait(delay) [if action execution aborted, delay is interrupted]
         self.event: Action.Event = Action.Event()
@@ -41,17 +41,21 @@ class Action(ABC):
         assert self.event.end
         return self.event.end - self.event.start
 
+    @property
+    def is_finished(self) -> bool:
+        return self.result == Result.FINISHED
+
     # priority comparison used when action put into priority queue for execution
-    def __gt__(self, other):
+    def __gt__(self, other) -> bool:
         return self.priority > other.priority
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.priority == other.priority
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> bool:
         return self.priority >= other.priority
 
-    def execute_wrapper(self, lock: Condition):
+    def execute_wrapper(self, lock: Condition) -> None:
         self.logger.debug(f'{who(self)} is being executed.')
         self.event.start = time()
 
@@ -81,8 +85,8 @@ class Action(ABC):
 
 class NoneAction(Action):
     """ No Operation Action. Useful to unblock thread waiting for an Action to be put into empty execution queue."""
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(priority=0, duration=0)
 
-    def execute(self):
+    def execute(self) -> None:
         pass
