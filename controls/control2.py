@@ -2,7 +2,7 @@ import time
 import random
 from enum import Enum
 
-from lib.utils import who
+from lib.utils import who, time2next
 from lib.threading2 import ComponentThread
 from actuators import engine
 from actuators.action import Priority, Result
@@ -33,10 +33,6 @@ class Control2(ComponentThread):
         self._mood = self.decide()
         self.logger.debug(f'{who(self)} decision: {self._mood}')
         self.perform()
-
-        delay = self.period - (time.time() - self.last_iteration_time)
-        self.logger.debug(f'{who(self)} finished, waiting {delay}s for new iteration.')
-        time.sleep(delay)  # throttling
 
     def decide(self) -> Mood:
         match self._mood:

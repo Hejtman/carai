@@ -17,4 +17,9 @@ def wait_for_callable(f: callable, expected_value: Any, timeout: float, period: 
 
 def who(obj: any) -> str:
     """ Convenience for e.g.: logging. """
-    return f'{obj.__class__.__name__} {hex(id(object))}'
+    return f'{obj.__class__.__name__} {hex(id(obj))}'
+
+
+def time2next(period: float, start_time: float):
+    """ Seconds until next period should be started. Always positive. """
+    return max(period - (time.time() - start_time), 0)

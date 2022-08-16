@@ -2,3 +2,9 @@ https://refactoring.guru/design-patterns/observer/python/example
 
 TODO: File Log format
 TODO: sudo service ezblock stop  # when starting (start it back when exiting?)
+
+from typing import Protocol
+class Actuator(Protocol)
+   start: callable
+   stop: callable
+   iterate: callable

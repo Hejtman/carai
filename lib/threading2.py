@@ -3,7 +3,7 @@ import logging
 from threading import Thread, Event
 from abc import ABC, abstractmethod
 
-from lib.utils import who
+from lib.utils import who, time2next
 
 
 class LoggingThread(Thread, ABC):
@@ -44,11 +44,16 @@ class LoggingThread(Thread, ABC):
 
 class LoggingExceptionsThread(LoggingThread, ABC):
     """ LoggingThread logging + ignoring exceptions. """
+    def __init__(self) -> None:
+        super().__init__()
+        self.last_exception = None
+
     def _iterate(self):
         # noinspection PyBroadException
         try:
             self.iterate()
-        except:  # log and ignore
+        except Exception as ex:  # log and ignore
+            self.last_exception = ex
             self.logger.exception(f'{who(self)} thread got unhandled exception:')
 
 
@@ -57,16 +62,18 @@ class ComponentThread(LoggingExceptionsThread, ABC):
     def __init__(self, period) -> None:
         super().__init__()
         self.period = period
-        self.last_iteration_time: float = 0
+        self.iteration_time: float = 0
 
     def _iterate(self):
-        # noinspection PyBroadException
         try:
-            self.last_iteration_time = time.time()
+            self.iteration_time = time.time()
             self.iterate()
-        except:  # log and ignore
-            self.logger.exception(f'{who(self)} thread got unhandled exception:')
+        except Exception as ex:  # log and ignore
+            self.last_exception = ex
+            self.logger.exception(f'{who(self)} thread got an unhandled exception:')
+        time.sleep(time2next(self.period, self.iteration_time))
 
     @property
     def state(self) -> str:
-        return '✅' if time.time() - self.last_iteration_time <= self.period else '❌'
+        return f'💥{self.last_exception}' if self.last_exception else '✅' if time2next(self.period, self.iteration_time) else '⌛'
+

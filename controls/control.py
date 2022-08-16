@@ -7,8 +7,9 @@ from controls.control1 import Control1
 from controls.control2 import Control2
 from controls.rc import RC
 from lib.threading2 import LoggingExceptionsThread
-from lib.utils import who
+from lib.utils import who, time2next
 from sensors import battery, ultrasonic
+from config import Config
 
 
 class Control:
@@ -45,9 +46,10 @@ class Control:
         self.logger = logging.getLogger(__name__)
         self.priority = Priority.EMERGENCY
         self.period = 1
-        self.last_iteration_time = 0
+        self.iteration_time = 0
         self.performing = ''
         self.performing_action = None
+        self.last_exception = None
 
         # DEBUG - to limit amount of logs
         self.battery.stop()
@@ -72,7 +74,7 @@ class Control:
 
         match sensor:
             case self.battery:
-                if sensor.value <= battery.VERY_LOW_VOLTAGE:  # DIE
+                if sensor.value <= Config.VERY_LOW_VOLTAGE:  # DIE
                     self.perform(self.terminal, terminal.ShutDown(self.priority, 0), f'Shutting down the system to prevent battery damage do to low battery: {sensor.value} V.')
 
             case self.ultrasonic:
@@ -91,15 +93,16 @@ class Control:
             while True:
                 # noinspection PyBroadException
                 try:
-                    self.last_iteration_time = time.time()
+                    self.iteration_time = time.time()
                     if self.performing_action and self.performing_action.is_finished:
                         self.performing = ''
                     # TODO: watching over sensors (and actuators processing given tasks?)
-                    time.sleep(self.period)
+                    time.sleep(time2next(self.period, self.iteration_time))
                 except KeyboardInterrupt:
                     self.logger.info(f'{who(self)} KeyboardInterrupt >> exiting')
                     break
-                except:  # log & forget
+                except Exception as ex:  # log & forget
+                    self.last_exception = ex
                     self.logger.exception(f'{who(self)} FATAL ERROR IN THE MAIN LOOP:')
 
     def perform(self, actuator, action, log) -> None:
@@ -113,7 +116,7 @@ class Control:
 
     @property
     def state(self) -> str:
-        status = '✅' if time.time() - self.last_iteration_time <= self.period else '❌'
+        status = f'💥{self.last_exception}' if self.last_exception else '✅' if time2next(self.period, self.iteration_time) else '⌛'
         return f'{status} {self.performing}'
 
 # todo: move performing as justification into the action?

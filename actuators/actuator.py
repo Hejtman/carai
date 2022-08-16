@@ -43,7 +43,7 @@ class Actuator(LoggingExceptionsThread):
         with self.lock:
             self.current_action = self.action_queue.get()
             self.logger.debug(f'{who(self)}: getting new action for execution {who(self.current_action)}')
-            self.current_action.execute_wrapper(self.lock)  # actuator's lock needed for waiting given action.duration (also lock might get notify to abort the execution)
+            self.current_action.execute_wrapper(self)       # actuator's lock needed for waiting given action.duration (also lock might get notify to abort the execution)
             self.current_action = None
 
     def stop(self, abort_current=False) -> None:
@@ -57,4 +57,6 @@ class Actuator(LoggingExceptionsThread):
     @property
     def state(self) -> str:
         """ This method is called from outer thread. Variables might change asynchronously. """
-        return '✅' if self.current_action is None else f'{self.current_action.__class__.__name__} {str(self.action_queue.queue)}'
+        status = f'💥{self.last_exception}' if self.last_exception else '✅'
+        actions = f'{self.current_action.__class__.__name__} {str(self.action_queue.queue)}' if self.current_action else ''
+        return f'{status} {actions}'

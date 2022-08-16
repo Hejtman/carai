@@ -26,7 +26,6 @@ class Sensor(ComponentThread, ABC):
         """ Sensor reading and data processing iteration (which gets repeatedly called while this thread lives). """
         self.process_raw_value(self._read_raw_value())
         self._control.process_data(self)
-        time.sleep(self.period)
 
     @abstractmethod
     def _read_raw_value(self) -> None:

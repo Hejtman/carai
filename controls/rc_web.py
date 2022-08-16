@@ -3,7 +3,11 @@ from http.server import BaseHTTPRequestHandler
 
 class Web(BaseHTTPRequestHandler):
     _control = None  # set externally before instantiation
-    CSS = '<style>table { border: 1px solid black; }</style>'
+    # FIXME: suppress double-click behaviour
+    CSS = '''<style>
+    table { border: 1px solid black; }
+    tr, input {-webkit-user-select: none;}
+    </style>'''
     META = '<meta http-equiv="refresh" content="10">'  # FIXME: reload only img from camera + status or iframe it on different page than RC keyboard!
 
     def _send_headers(self):
@@ -36,6 +40,11 @@ class Web(BaseHTTPRequestHandler):
     @property
     def rc(self) -> str:
         return f'''
+<script>
+  function mousedown(id) {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=PRESSED"); }}
+  function mouseup(id)   {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=RELEASED"); }}
+</script>
+
 <table>
   <tr><th colspan="7"><a href="{'RC' if self.path == '/' else '/'}">RC</a></th></tr>
   <tr><td><input type='submit' id="MOVE_FORWARD"  onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▲"/></td>
@@ -50,11 +59,6 @@ class Web(BaseHTTPRequestHandler):
       <td>                                                                                                       </td>
       <td><input type='submit' id="MOVE_BACKWARD" onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▼"/></td></tr>
 </table>
-
-<script>
-  function mousedown(id) {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=PRESSED"); }}
-  function mouseup(id)   {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=RELEASED"); }}
-</script>
 '''
 
     @property
@@ -78,7 +82,7 @@ TODO: CONSOLE LOG
             case 'COMPONENTS':
                 return f'<html><head>{self.META}<title>COMPONENTS</title></head><body>{self.components}</body></html>'
             case 'RC':
-                return f'<html><head>{self.META}<title>RC</title></head><body>{self.rc}</body></html>'
+                return f'<html><head>{self.CSS}{self.META}<title>RC</title></head><body>{self.rc}</body></html>'
             case _:
                 return f'<html><head><title>ERROR</title></head><body>404 PAGE "{self.path}" NOT FOUND!</body></html>'
 

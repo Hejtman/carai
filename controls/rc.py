@@ -1,3 +1,4 @@
+import time
 from http.server import HTTPServer
 
 from lib.threading2 import ComponentThread
@@ -12,13 +13,9 @@ class RC(ComponentThread):
         * input = responding POST requests from WebPage buttons > translate to actions for engine actuator
     """
     def __init__(self, control) -> None:
-        super().__init__(period=float('inf'))  # component status = running after first iteration...forever
+        super().__init__(period=5)  # 5s retry if something fails
         Web._control = control
         self.webServer = None
-
-    def start(self) -> None:
-        self.webServer = HTTPServer(Config.RC_HTTP_SERVER, Web)
-        super().start()  # start iterating
 
     def stop(self):
         super().stop()  # stop iterating
@@ -27,4 +24,9 @@ class RC(ComponentThread):
         self.webServer.shutdown()
 
     def iterate(self):
+        self.webServer = HTTPServer(Config.RC_HTTP_SERVER, Web)
         self.webServer.serve_forever()  # blocking, iterates only to log exceptions from HTTPServer
+
+    @property
+    def state(self) -> str:
+        return f'💥{self.last_exception}' if self.last_exception else '✅'

@@ -49,19 +49,19 @@ class Action(ABC):
     def __gt__(self, other) -> bool:
         return self.priority > other.priority
 
-    def __eq__(self, other) -> bool:
-        return self.priority == other.priority
-
     def __ge__(self, other) -> bool:
         return self.priority >= other.priority
 
-    def execute_wrapper(self, lock: Condition) -> None:
+    def __eq__(self, other) -> bool:
+        return other and (self.__class__, self.priority, self.duration) == (other.__class__, other.priority, other.duration)
+
+    def execute_wrapper(self, actuator) -> None:
         self.logger.debug(f'{who(self)} is being executed.')
         self.event.start = time()
 
         # noinspection PyBroadException
         try:
-            self.execute()
+            self.execute(actuator)
         except:                             # LOG & FORGET: A single Action execution shall not bring down an entire Actuator
             self.logger.exception(f'{who(self)} execution died by exception:')
             self.result = Result.FAILED
@@ -71,7 +71,7 @@ class Action(ABC):
             timeout = self.duration - execution_duration
             self.logger.debug(f'{who(self)} execution took {execution_duration}, now waiting {timeout}s to finish it.')
 
-            aborted = lock.wait(timeout)    # wait until action duration reached (or action aborted prematurely from outer thread)
+            aborted = actuator.lock.wait(timeout)    # wait until action duration reached (or action aborted prematurely from outer thread)
 
             self.result = Result.ABORTED if aborted else Result.FINISHED
             self.event.end = time()
@@ -79,7 +79,7 @@ class Action(ABC):
             self.logger.log(level, f'{who(self)} execution of {self.__dict__} result={self.result} after {self.time_spent}s')
 
     @abstractmethod
-    def execute(self) -> None:
+    def execute(self, actuator) -> None:
         pass
 
 
@@ -88,5 +88,5 @@ class NoneAction(Action):
     def __init__(self) -> None:
         super().__init__(priority=0, duration=0)
 
-    def execute(self) -> None:
+    def execute(self, actuator) -> None:
         pass

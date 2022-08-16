@@ -12,7 +12,7 @@ class CustomAction(Action):
         super().__init__(0, 0)
         self.was_executed = False
 
-    def execute(self):
+    def execute(self, actuator):
         self.was_executed = True
 
 
@@ -23,7 +23,7 @@ class ExecutionOrderTestingAction(Action):
         super().__init__(*args, **kwargs)
         self.execution_order = -1
 
-    def execute(self):
+    def execute(self, actuator):
         ExecutionOrderTestingAction.execution_counter += 1
         self.execution_order = self.execution_counter
 

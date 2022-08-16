@@ -18,7 +18,7 @@ class Control1(ComponentThread):
         self._control = control
 
     def iterate(self):
+        pass
         # self.logger.info(f'{who(self)} decision: None')
         # TODO: process sensor values from controls
         # TODO: decide actions via controls
-        time.sleep(self.period)
