@@ -30,11 +30,12 @@ class Web(BaseHTTPRequestHandler):
 
     @property
     def components(self) -> str:
+        # TODO: turn on/off component
         return f'''
 <table>
 <tr><th colspan="2"><a href="{'COMPONENTS' if self.path == '/' else '/'}">COMPONENTS</a></th></tr>
-<tr><td>{self._control.__class__.__name__}</td><td>{self._control.state}</td></tr>
 {''.join([f'<tr><td>{c.__class__.__name__}</td><td>{c.state}</td></tr>' for c in self._control.components])}
+<tr><td>{self._control.__class__.__name__}</td><td>{self._control.state}</td></tr>
 </table>'''
 
     @property

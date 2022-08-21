@@ -8,3 +8,25 @@ class Actuator(Protocol)
    start: callable
    stop: callable
    iterate: callable
+
+
+
+
+SETUP:
+You can create a new system service by creating a file with the following content in ‘/etc/systemd/system’ folder. You can name it anything with an extension of ‘.service’
+
+[Unit]
+Description="Process Data"
+[Service]
+Restart=always
+WorkingDirectory=<PATH_TO_PROJECT_DIRECTORY>
+ExecStart=<PATH_TO_PYTHON_EXECUTABLE> <YOUR_SCRIPT>.py
+[Install]
+WantedBy=multi-user target
+Once you’re done, you can run the following commands on the terminal to activate the service.
+
+# To make your new service available to systemctl utility.
+$ systemctl daemon-reload
+# To start the service
+$ systemctl start <YOUR_SERVICE_FILE_NAME>.service
+$ systemctl status <YOUR_SERVICE_FILE_NAME>.service

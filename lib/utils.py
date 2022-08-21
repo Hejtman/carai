@@ -17,6 +17,11 @@ def wait_for_callable(f: callable, expected_value: Any, timeout: float, period: 
 
 def who(obj: any) -> str:
     """ Convenience for e.g.: logging. """
+    return f'{obj.__class__.__name__}'
+
+
+def who_long(obj: any) -> str:
+    """ Convenience for e.g.: logging. """
     return f'{obj.__class__.__name__} {hex(id(obj))}'
 
 

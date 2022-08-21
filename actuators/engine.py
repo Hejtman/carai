@@ -1,61 +1,66 @@
+from abc import ABC, abstractmethod
 from actuators.action import Action
 from actuators.actuator import Actuator
 
-from lib.utils import who
+from lib.utils import who_long
+from hw import HW
+
+
+class EngineAction(Action, ABC):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def execute(self, actuator) -> None:
+        self.logger.debug(f'{who_long(actuator)} -> {who_long(self)}: {actuator.speed=} {actuator.angle=}  {self.justification}')
+
+        if actuator.is_different_action(self):  # execute the action, consume time, but perform change of engine configuration only when discontinuing previous action
+            actuator.set_new_action(self)
+            self.set(actuator)
+            HW.set_speed(actuator.speed)
+            HW.set_steering_angle(actuator.angle)
+
+    @abstractmethod
+    def set(self, actuator: Actuator) -> None:
+        pass
 
 
 class Engine(Actuator):
     """
-        * Performs drive / stop actions on the motors.
+        Allows robot to perform action which will move it from one location to another: MoveStraight, TurnLeft, Stop ...
+        * Two motors + steering servo togather participate on the moving action.
         * All motor actions are performed exclusively on the same thread to ensure serialisation / prioritisation.
     """
-    default_speed = 1
+    default_speed = 0.1  # FIXME
 
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__(accepts=EngineAction)
         self.speed = 0
         self.angle = 0
-        self.previous_action = None
         self.latest_action = None
 
-    def update_action(self, action: Action):
-        self.previous_action = self.latest_action
+    def set_new_action(self, action: Action):
         self.latest_action = action
 
-
-class Start(Action):
-    def execute(self, actuator: Engine) -> None:
-        actuator.update_action(self)
-
-        if self != actuator.previous_action:
-            actuator.speed = Engine.default_speed
-            # TODO: real engine start action
-            self.logger.info(f'{who(actuator)} -> {who(self)} {actuator.speed=}')
-        else:
-            self.logger.debug(f'{who(actuator)} -> {who(self)} {actuator.speed=}')
+    def is_different_action(self, action: Action):
+        return self.latest_action != action
 
 
-class Stop(Action):
-    def execute(self, actuator: Engine) -> None:
-        actuator.update_action(self)
-
-        if self != actuator.previous_action:
-            actuator.speed = 0
-            # TODO: real engine start action
-            self.logger.info(f'{who(actuator)} -> {who(self)} {actuator.speed=}')
-        else:
-            self.logger.debug(f'{who(actuator)} -> {who(self)} {actuator.speed=}')
+class MoveStraight(EngineAction):
+    def set(self, actuator: Engine) -> None:
+        actuator.speed = Engine.default_speed
+        actuator.angle = 0
 
 
-class SpeedUP(Action):
-    def execute(self, actuator: Engine) -> None:
-        self.logger.debug(f'{who(self)} Engine: Speeding UP {actuator.speed}+{Engine.default_speed}')
-        actuator.update_action(self)
-        actuator.speed += Engine.default_speed
+class TurnLeft(EngineAction):
+    def set(self, actuator: Engine) -> None:
+        actuator.angle = 10  # FIXME
 
 
-class SlowDown(Action):  # TODO: negative / reverse?
-    def execute(self, actuator: Engine) -> None:
-        self.logger.debug(f'{who(self)} Engine: Slowing DOWN {actuator.speed}-{Engine.default_speed}')
-        actuator.update_action(self)
-        actuator.speed -= Engine.default_speed
+class TurnRight(EngineAction):
+    def set(self, actuator: Engine) -> None:
+        actuator.angle = 10  # FIXME
+
+
+class Stop(EngineAction):
+    def set(self, actuator: Engine) -> None:
+        actuator.speed = 0

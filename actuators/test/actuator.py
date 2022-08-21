@@ -162,3 +162,7 @@ class ActuatorTest(unittest.TestCase):
         assert actions[0].time_spent < duration
         assert wait_for_callable(lambda: high_priority_action.result, Result.FINISHED, period=duration / 10, timeout=2 * duration)  # wait for high priority action to be finished
         assert actions[1].result is not Result.FINISHED
+
+    def test_10_that_actuator_refuses_duplicates(self) -> None:
+        # TODO: put(action, duplicates=2)
+        pass
