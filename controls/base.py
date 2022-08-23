@@ -1,17 +1,18 @@
 import logging
 import time
+from datetime import timedelta
 from abc import ABC, abstractmethod
 
 from lib.utils import who_long, time2next
 
 
 class Component(ABC):
-    """ Logs + state exceptions, but without implementing threading loop periodically calling _iterate(). """
+    """ Logs + state exceptions, but without implementing periodic loop over iterate_wrapper(). """
     def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
         self.last_exception = None
 
-    def _iterate(self):
+    def iterate_wrapper(self):
         try:
             self.iterate()
         except Exception as ex:  # log and remember
@@ -28,45 +29,43 @@ class Component(ABC):
 
 
 class ComponentPeriod(Component, ABC):
-    """ Component + period reflected in state + sleep to finish a period. """
+    """ Component + sleep until next iteration/period + state reflects if iterate_wrapper was called within the given period. """
     def __init__(self, period):
         super().__init__()
         self.period = period
         self.iteration_time: float = 0
 
-    def _iterate(self):
+    def iterate_wrapper(self):
         self.iteration_time = time.time()
-        super()._iterate()
+        super().iterate_wrapper()
         time.sleep(time2next(self.period, self.iteration_time))
 
     @property
     def state(self) -> str:
-        hour = 3600  # FIXME: time interval hour
         return f'{super().state}' if time2next(self.period, self.iteration_time) \
-            else f'⌛ {time.time()-self.iteration_time}' if time.time()-self.iteration_time < hour \
-            else '❌'
+            else f'⌛ {time.time()-self.iteration_time}' if time.time()-self.iteration_time < timedelta(hours=1).total_seconds() \
+            else '💀'
 
 
-class ControlBase(ComponentPeriod, ABC):
-    """ ComponentPeriod + last_action.justification in state (cleared when last_action finished). """
+class ControlBase(ComponentPeriod):
+    """ ComponentPeriod performing conditioned actions in each iteration + reflecting these in state """
     def __init__(self, period, control) -> None:
         super().__init__(period)
         self._control = control
-        self.last_action = None
-        self.wiring = {}
+        self.performing_actions = []
+        self.conditional_actions: tuple[callable, callable] = tuple()
 
-    def _iterate(self):
-        super()._iterate()
-        if self.last_action and self.last_action.is_finished:
-            self.last_action = None
+    def iterate_wrapper(self):
+        self.performing_actions = [action for action in self.performing_actions if not action.is_processed]
+        super().iterate_wrapper()
 
     def iterate(self):
-        [handler() for condition, handler in self.wiring.items() if condition()]
+        [self.perform(action) for condition, action in self.conditional_actions if condition()]
 
     def perform(self, action) -> None:
-        next(actuator for actuator in self._control.actuators if actuator.put(action))
-        self.last_action = action
+        self.performing_actions.append(action)
+        any(actuator.put(action) for actuator in self._control.actuators)
 
     @property
     def state(self) -> str:
-        return f'{super().state} {self.last_action.justification if self.last_action else ""}'
+        return f'{super().state} {", ".join(a.justification for a in self.performing_actions)}'

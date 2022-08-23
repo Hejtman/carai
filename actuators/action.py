@@ -8,6 +8,7 @@ from lib.utils import who_long
 
 class Priority(IntEnum):
     LOW = 1000      # Neo   cortex - menu, games, interactions
+    # RC ?
     HIGH = 100      # Paleo cortex - sensory/camera processing, location/map creation, RC
     EMERGENCY = 10  # Archy cortex - sensory readings > emergency levels
 
@@ -15,8 +16,9 @@ class Priority(IntEnum):
 class Result(IntEnum):
     NOT_SET = -1
     FINISHED = 0
-    ABORTED = 1
-    FAILED = 2
+    DROPPED = 1
+    ABORTED = 2
+    FAILED = 3
 
 
 class Action(ABC):
@@ -47,6 +49,10 @@ class Action(ABC):
     @property
     def is_finished(self) -> bool:
         return self.result == Result.FINISHED
+
+    @property
+    def is_processed(self) -> bool:
+        return self.result != Result.NOT_SET
 
     def __gt__(self, other) -> bool:  # priority comparison used when action put into priority queue for execution
         return self.priority > other.priority

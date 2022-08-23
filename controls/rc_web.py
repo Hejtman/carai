@@ -9,6 +9,10 @@ class Web(BaseHTTPRequestHandler):
     tr, input {-webkit-user-select: none;}
     </style>'''
     META = '<meta http-equiv="refresh" content="10">'  # FIXME: reload only img from camera + status or iframe it on different page than RC keyboard!
+    JS = '''<script>
+      function mousedown(id) {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=PRESSED"); }}
+      function mouseup(id)   {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=RELEASED"); }}
+    </script>'''
 
     def _send_headers(self):
         self.send_response(200)
@@ -41,11 +45,6 @@ class Web(BaseHTTPRequestHandler):
     @property
     def rc(self) -> str:
         return f'''
-<script>
-  function mousedown(id) {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=PRESSED"); }}
-  function mouseup(id)   {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=RELEASED"); }}
-</script>
-
 <table>
   <tr><th colspan="7"><a href="{'RC' if self.path == '/' else '/'}">RC</a></th></tr>
   <tr><td><input type='submit' id="MOVE_FORWARD"  onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▲"/></td>
@@ -67,6 +66,7 @@ class Web(BaseHTTPRequestHandler):
         return f"""
 <html><head>{self.CSS}{self.META}<title>Remote Control</title></head>
 <body>
+{self.JS}
 {self.components}
 {self.rc}
 TODO: CAMERA IMAGE
@@ -81,9 +81,9 @@ TODO: CONSOLE LOG
             case '':
                 return self.home_page
             case 'COMPONENTS':
-                return f'<html><head>{self.META}<title>COMPONENTS</title></head><body>{self.components}</body></html>'
+                return f'<html><head>{self.META}<title>COMPONENTS</title></head><body>{self.JS}{self.components}</body></html>'
             case 'RC':
-                return f'<html><head>{self.CSS}{self.META}<title>RC</title></head><body>{self.rc}</body></html>'
+                return f'<html><head>{self.CSS}{self.META}<title>RC</title></head><body>{self.JS}{self.rc}</body></html>'
             case _:
                 return f'<html><head><title>ERROR</title></head><body>404 PAGE "{self.path}" NOT FOUND!</body></html>'
 

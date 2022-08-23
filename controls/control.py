@@ -1,4 +1,5 @@
-import logging
+import time
+from contextlib import suppress
 
 from actuators import engine, terminal
 from actuators.actuator import Actuator
@@ -49,10 +50,10 @@ class Control(ControlBase):
         # TODO: ds18x20 temperature
 
         # control - producing actions from sensory data - starting last
-        # self                                              # archy cortex
-        self.control1 = Control1(period=0.5, control=self)  # paleo cortex
-        self.rc = RC(control=self)                          # remote controls web input/output
         self.control2 = Control2(period=1, control=self)    # neo cortex
+        self.rc = RC(control=self)                          # remote controls web input/output
+        self.control1 = Control1(period=0.5, control=self)  # paleo cortex
+        # self                                              # archy cortex
 
         # all above
         self.components = [c for c in self.__dict__.values() if isinstance(c, LoggingExceptionsThread)]
@@ -60,43 +61,33 @@ class Control(ControlBase):
         assert len(self.components) == 7
         assert len(self.actuators) == 2
 
-        self.emergency_actions_kwargs = {'origin': self, 'priority': Priority.EMERGENCY, 'same_actions_limit': 1, 'abort_previous': True}
+        self.actions_kwargs = {'origin': self, 'priority': Priority.EMERGENCY, 'same_actions_limit': 1, 'abort_previous': True}
 
     def __enter__(self) -> None:
         self.logger.info(f'{who_long(self)} thread running, starting all the components:')
-        for component in self.components:
-            component.start()
+        [component.start() for component in self.components]
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.logger.info(f'{who_long(self)} thread ending, stopping all the components:')
-        for component in self.components:
-            component.stop()
-        for component in self.components:
-            component.join()
+        [component.stop() for component in self.components]
+        [component.join() for component in self.components]
         self.logger.info(f'{who_long(self)}: not2b')
 
     def process_data(self, sensor) -> None:
         """ This method gets called asynchronously from each sensor thread. """
         self.logger.debug(f'{who_long(self)} processing: {who_long(sensor)}: {sensor.value}')
-        match sensor:
-            case self.battery:
-                if sensor.value <= Config.VERY_LOW_VOLTAGE:
-                    self.perform(terminal.ShutDown(duration=5, justification=f'Shutting down the system to prevent battery damage: {sensor.value} V.', **self.emergency_actions_kwargs))
-            case self.ultrasonic:
-                if sensor.value <= 30:  # mm
-                    self.perform(engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} mm.', **self.emergency_actions_kwargs))
-            case _:
-                self.logger.error(f'Unhandled sensor: {who_long(sensor)}')
+        action = {
+            self.battery: terminal.ShutDown(duration=5, justification=f'Shutting down the system to prevent battery damage: {sensor.value} V.', **self.actions_kwargs) if sensor.value <= Config.VERY_LOW_VOLTAGE else None,
+            self.ultrasonic: engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} mm.', **self.actions_kwargs) if sensor.value <= 30 else None,
+        }[sensor]
+        if action:
+            self.perform(action)
 
     def main_loop(self) -> None:
-        """
-            Watchdog running on main thread. Watching over components (living in separate threads) reporting as expected.
-            No exception shall pass to the main().
-        """
         with self:
             while True:
-                try:  # FIXME: NEEDED?
-                    self._iterate()
+                try:
+                    self.iterate_wrapper()
                 except KeyboardInterrupt:
                     self.logger.info(f'{who_long(self)} KeyboardInterrupt >> exiting')
                     break

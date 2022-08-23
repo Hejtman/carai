@@ -3,7 +3,7 @@ from time import time
 from threading import Condition
 from queue import PriorityQueue
 
-from actuators.action import Action, NoneAction
+from actuators.action import Action, NoneAction, Result
 from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who_long, who
 
@@ -35,17 +35,18 @@ class Actuator(LoggingExceptionsThread):
 
         if not isinstance(action, self.accepts):
             self.logger.debug(f'{who(self)}: Refusing to put incompatible {action}')
-            return False  # incompatible
+            return False                                    # incompatible > try other actuator
 
         if action.same_actions_limit and self.count_same_actions(action) >= action.same_actions_limit:
             self.logger.debug(f'{who(self)}: Refusing to put another: {action} as {action.same_actions_limit=} level reached.')
-            return True  # compatible
+            action.result = Result.DROPPED
+            return True                                     # compatible but it does not meet its own condition to be queued for execution
 
-        self.action_queue.put(action)                                   # put() needs to be outside of self.lock as get() is inside of self.lock and blocking while empty (deadlock if both inside)
+        self.action_queue.put(action)                       # put() needs to be outside of self.lock as get() is inside of self.lock and blocking while empty (deadlock if both inside)
         action.event.queued = time()
 
         if abort_current:
-            with self.lock:                                             # lock self.current_action to not abort just added (high priority) action as get runs on other thread and can happen any time
+            with self.lock:                                 # lock self.current_action to not abort just added (high priority) action as get runs on other thread and can happen any time
                 if self.current_action and self.current_action.priority > action.priority:  # higher number means lower priority >>> surly different action >>> abort it
                     self.logger.debug(f'{who(self)} notified to abort current action: {who_long(self.current_action)} in favor of {who_long(action)}.')
                     self.lock.notify()
@@ -76,5 +77,5 @@ class Actuator(LoggingExceptionsThread):
     @property
     def state(self) -> str:
         """ This method is called from outer thread. Variables might change asynchronously. """
-        actions = f'{who(self.current_action)} [{", ".join(who(a) for a in self.action_queue.queue)}]' if self.current_action else ''
+        actions = f'{self.current_action.justification} [{", ".join(who(a) for a in self.action_queue.queue)}]' if self.current_action else ''
         return f'{super().state} {actions}'

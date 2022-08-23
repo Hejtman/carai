@@ -22,11 +22,11 @@ class LoggingExceptionsThread(Thread, ABC):
         self.logger.info(f'{who_long(self)} thread running.')
 
         while not self.event_stop.is_set():
-            self._iterate()
+            self.iterate_wrapper()
 
         self.logger.info(f'{who_long(self)} thread ended.')
 
-    def _iterate(self):
+    def iterate_wrapper(self):
         try:
             self.iterate()
         except Exception as ex:  # log and remember
@@ -45,4 +45,4 @@ class LoggingExceptionsThread(Thread, ABC):
     @property
     def state(self) -> str:
         """ This method is called from outer thread. Variables might change asynchronously. """
-        return f'💥{self.last_exception}' if self.last_exception else '✅'
+        return f'💥{self.last_exception}' if self.last_exception else '❌' if self.event_stop.is_set() else '✅'

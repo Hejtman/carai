@@ -1,5 +1,7 @@
 https://refactoring.guru/design-patterns/observer/python/example
 
+TODO: fix unittest
+TODO: neo cortex action vs method vs mood
 TODO: File Log format
 TODO: sudo service ezblock stop  # when starting (start it back when exiting?)
 

@@ -9,7 +9,7 @@ from lib.utils import wait_for_callable
 
 class CustomAction(Action):
     def __init__(self):
-        super().__init__(0, 0)
+        super().__init__(origin=None, priority=0, duration=0)
         self.was_executed = False
 
     def execute(self, actuator):
@@ -34,7 +34,7 @@ class ActuatorTest(unittest.TestCase):
         TerminalLogger(file_path=f'{Path.home()}/{Path.cwd().stem}/{Path(__file__).stem}.log')
 
     def setUp(self) -> None:
-        self.actuator = Actuator()
+        self.actuator = Actuator(accepts=CustomAction)
 
     def tearDown(self) -> None:
         if self.actuator.is_alive():
@@ -77,9 +77,9 @@ class ActuatorTest(unittest.TestCase):
     def test_05_that_actuator_executes_actions_sequentially(self) -> None:
         ExecutionOrderTestingAction.execution_counter = 0
         duration = 0.1
-        actions = [ExecutionOrderTestingAction(priority=0, duration=duration),
-                   ExecutionOrderTestingAction(priority=1, duration=duration),
-                   ExecutionOrderTestingAction(priority=2, duration=duration)]
+        actions = [ExecutionOrderTestingAction(origin=None, priority=0, duration=duration),
+                   ExecutionOrderTestingAction(origin=None, priority=1, duration=duration),
+                   ExecutionOrderTestingAction(origin=None, priority=2, duration=duration)]
         for action in actions:
             self.actuator.put(action)
 
@@ -94,9 +94,9 @@ class ActuatorTest(unittest.TestCase):
 
     def test_06_that_actuator_performs_high_priority_action_first(self) -> None:
         ExecutionOrderTestingAction.execution_counter = 0
-        actions = [ExecutionOrderTestingAction(priority=Priority.LOW+1, duration=0),  # 3. (higher number means lower priority)
-                   ExecutionOrderTestingAction(priority=Priority.HIGH, duration=0),   # 1.
-                   ExecutionOrderTestingAction(priority=Priority.LOW, duration=0)]    # 2.
+        actions = [ExecutionOrderTestingAction(origin=None, priority=Priority.LOW+1, duration=0),  # 3. (higher number means lower priority)
+                   ExecutionOrderTestingAction(origin=None, priority=Priority.HIGH, duration=0),   # 1.
+                   ExecutionOrderTestingAction(origin=None, priority=Priority.LOW, duration=0)]    # 2.
         for action in actions:
             self.actuator.put(action)
 
@@ -109,9 +109,9 @@ class ActuatorTest(unittest.TestCase):
 
     def test_07_that_actuator_performs_high_priority_action_first_different_order(self) -> None:
         ExecutionOrderTestingAction.execution_counter = 0
-        actions = [ExecutionOrderTestingAction(priority=Priority.LOW-1, duration=0),  # 2. (lower number means higher priority)
-                   ExecutionOrderTestingAction(priority=Priority.LOW, duration=0),    # 3.
-                   ExecutionOrderTestingAction(priority=Priority.HIGH, duration=0)]   # 1.
+        actions = [ExecutionOrderTestingAction(origin=None, priority=Priority.LOW-1, duration=0),  # 2. (lower number means higher priority)
+                   ExecutionOrderTestingAction(origin=None, priority=Priority.LOW, duration=0),    # 3.
+                   ExecutionOrderTestingAction(origin=None, priority=Priority.HIGH, duration=0)]   # 1.
 
         for action in actions:
             self.actuator.put(action)
@@ -126,15 +126,15 @@ class ActuatorTest(unittest.TestCase):
     def test_08_that_actuator_performs_high_priority_action_immediately_after_finishing_currently_executed(self) -> None:
         ExecutionOrderTestingAction.execution_counter = 0
         duration = 0.01
-        actions = [ExecutionOrderTestingAction(priority=Priority.LOW-1, duration=duration),  # 1. (lower number means higher priority)
-                   ExecutionOrderTestingAction(priority=Priority.LOW, duration=duration)]    # 3.
+        actions = [ExecutionOrderTestingAction(origin=None, priority=Priority.LOW-1, duration=duration),  # 1. (lower number means higher priority)
+                   ExecutionOrderTestingAction(origin=None, priority=Priority.LOW, duration=duration)]    # 3.
         for action in actions:
             self.actuator.put(action)
 
         self.actuator.start()
 
         assert wait_for_callable(lambda: actions[0].execution_order, 1, period=duration/10, timeout=2*duration)                     # wait for first low priority action to be executed
-        high_priority_action = ExecutionOrderTestingAction(priority=Priority.HIGH, duration=duration)
+        high_priority_action = ExecutionOrderTestingAction(origin=None, priority=Priority.HIGH, duration=duration)
         self.actuator.put(high_priority_action)
         assert all(action.result is Result.NOT_SET for action in actions)  # no action finished yet (duration period)
 
@@ -146,15 +146,15 @@ class ActuatorTest(unittest.TestCase):
     def test_09_that_actuator_aborts_lower_priority_action(self) -> None:
         ExecutionOrderTestingAction.execution_counter = 0
         duration = 0.01
-        actions = [ExecutionOrderTestingAction(priority=Priority.LOW-1, duration=1),  # 1. (lower number means higher priority)
-                   ExecutionOrderTestingAction(priority=Priority.LOW, duration=duration)]    # 3.
+        actions = [ExecutionOrderTestingAction(origin=None, priority=Priority.LOW-1, duration=1),  # 1. (lower number means higher priority)
+                   ExecutionOrderTestingAction(origin=None, priority=Priority.LOW, duration=duration)]    # 3.
         for action in actions:
             self.actuator.put(action)
 
         self.actuator.start()
 
         assert wait_for_callable(lambda: actions[0].execution_order, 1, period=duration/10, timeout=2*duration)                     # wait for first low priority action to be executed
-        high_priority_action = ExecutionOrderTestingAction(priority=Priority.HIGH, duration=duration)
+        high_priority_action = ExecutionOrderTestingAction(origin=None, priority=Priority.HIGH, duration=duration)
         self.actuator.put(high_priority_action, abort_current=True)
         assert all(action.result is not Result.FINISHED for action in actions)                                                      # no action finished yet (duration period)
 

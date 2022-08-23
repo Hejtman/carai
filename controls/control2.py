@@ -24,11 +24,20 @@ class Control2(ControlBase, LoggingExceptionsThread):
         super().__init__(period, control)
         LoggingExceptionsThread.__init__(self)
         self._mood = Mood.IDLE
-        self.low_p_actions_kwargs = {'origin': self, 'priority': Priority.LOW, 'same_actions_limit': 2, 'abort_previous': False}
+        self.actions_kwargs = {'origin': self, 'priority': Priority.LOW, 'same_actions_limit': 2, 'abort_previous': False}
+        self.conditional_actions = tuple()  # TODO
+        # [self.perform(action) for condition, action in self.conditional_actions if condition()]
+        # engine.Stop(duration=self.period, justification=f'Idling: stopping engine for {self.period}s.', **self.actions_kwargs)
+        # self.perform(engine.MoveStraight(duration=self.period, justification=f'Exploring: driving forward for {self.period}s.', **self.actions_kwargs))
 
+    @property
+    def state(self) -> str:
+        return f'{super().state} {self._mood}'
+
+"""
     def decide(self) -> Mood:
         match self._mood:
-            case Mood.IDLE:
+            case Mood.IDLE:  # FIXME: dict
                 return random.choices([Mood.IDLE, Mood.EXPLORE], weights=[9, 1])[0]  # 10% chance to start explore
             case Mood.EXPLORE:
                 if self.last_action and self.last_action.result == Result.ABORTED:
@@ -55,7 +64,4 @@ class Control2(ControlBase, LoggingExceptionsThread):
     def explore(self):
         # TODO: change direction somehow smart
         self.perform(engine.MoveStraight(duration=self.period, justification=f'Exploring: driving forward for {self.period}s.', **self.low_p_actions_kwargs))
-
-    @property
-    def state(self) -> str:  # FIXME: needed?
-        return f'{super().state} {self._mood}'
+"""
