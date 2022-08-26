@@ -1,7 +1,4 @@
-import time
-from contextlib import suppress
-
-from actuators import engine, terminal
+from actuators import engine, terminal, repro, voice
 from actuators.actuator import Actuator
 from actuators.action import Priority
 from controls.base import ControlBase
@@ -41,6 +38,8 @@ class Control(ControlBase):
         # actuators - processing actions - starts first
         self.terminal = terminal.Terminal()
         self.engine = engine.Engine()
+        self.repro = repro.Repro()
+        self.voice = voice.Voice()
 
         # sensors - prerequisite for producing actions - start second
         self.battery = battery.Battery(samples=10, period=10, control=self)
@@ -58,8 +57,8 @@ class Control(ControlBase):
         # all above
         self.components = [c for c in self.__dict__.values() if isinstance(c, LoggingExceptionsThread)]
         self.actuators = [c for c in self.__dict__.values() if isinstance(c, Actuator)]
-        assert len(self.components) == 7
-        assert len(self.actuators) == 2
+        assert len(self.components) == 9
+        assert len(self.actuators) == 4
 
         self.actions_kwargs = {'origin': self, 'priority': Priority.EMERGENCY, 'same_actions_limit': 1, 'abort_previous': True}
 

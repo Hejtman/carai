@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from lib.threading2 import LoggingExceptionsThread
+from lib.utils import who
 from controls.base import ComponentPeriod
 
 
@@ -21,12 +22,14 @@ class Sensor(ComponentPeriod, LoggingExceptionsThread, ABC):
 
     @property
     def value(self) -> [float]:
-        return self.values[-1] if self.values else 0
+        return self.values[-1] if self.values else -1
 
     def iterate(self) -> None:
         """ Sensor reading and data processing iteration (which gets repeatedly called while this thread lives). """
-        self.process_raw_value(self._read_raw_value())
-        self._control.process_data(self)
+        raw_value = self._read_raw_value()
+        self.raw_values.append(raw_value)
+        self.process_raw_value(raw_value)
+        self._control.process_data(self)  # FIXME: only if value is valid?
 
     @abstractmethod
     def _read_raw_value(self) -> None:
@@ -38,3 +41,7 @@ class Sensor(ComponentPeriod, LoggingExceptionsThread, ABC):
             self.values.append(raw)
         else:
             self.values[0] = raw
+
+    def stop(self):
+        super().stop()
+        self.logger.debug(f'{who(self)}\n{self.raw_values=}\n{self.values}')

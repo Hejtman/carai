@@ -1,16 +1,18 @@
+import time
 import random
 from enum import Enum
 
 from controls.base import ControlBase
 from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who_long
-from actuators import engine
+from actuators import repro, voice
 from actuators.action import Priority, Result
 
 
 class Mood(Enum):
     IDLE = 0,
     EXPLORE = 1,
+    INIT = 2
 
 
 class Control2(ControlBase, LoggingExceptionsThread):
@@ -23,12 +25,25 @@ class Control2(ControlBase, LoggingExceptionsThread):
     def __init__(self, period, control) -> None:
         super().__init__(period, control)
         LoggingExceptionsThread.__init__(self)
-        self._mood = Mood.IDLE
-        self.actions_kwargs = {'origin': self, 'priority': Priority.LOW, 'same_actions_limit': 2, 'abort_previous': False}
-        self.conditional_actions = tuple()  # TODO
+        self._mood = Mood.INIT
+        self.actions_kwargs = {'origin': self, 'priority': Priority.LOW, 'same_actions_limit': 1, 'abort_previous': False}
+        self.conditional_actions = (
+            #(lambda: self._mood == Mood.INIT, repro.PlayX(duration=10, justification='Just play some testing sound.', **self.actions_kwargs)),
+            #(lambda: self._mood == Mood.INIT, voice.SayHellow(duration=10, justification='Just play some testing sound.', **self.actions_kwargs)),
+        )
         # [self.perform(action) for condition, action in self.conditional_actions if condition()]
         # engine.Stop(duration=self.period, justification=f'Idling: stopping engine for {self.period}s.', **self.actions_kwargs)
         # self.perform(engine.MoveStraight(duration=self.period, justification=f'Exploring: driving forward for {self.period}s.', **self.actions_kwargs))
+
+    def iterate(self):
+        super().iterate()
+        if self._mood == Mood.INIT:
+            time.sleep(10)
+            self.perform(voice.SayHellow(duration=10, justification='Just to test voice.', **self.actions_kwargs))
+            time.sleep(10)
+            self.perform(repro.PlayX(duration=10, justification='Just to test playing some sound.', **self.actions_kwargs))
+            time.sleep(10)
+            self._mood = Mood.IDLE
 
     @property
     def state(self) -> str:

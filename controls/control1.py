@@ -14,7 +14,6 @@ class Control1(ControlBase, LoggingExceptionsThread):
 
         self.conditional_actions = (
             # (lambda: self._control.battery.value <= Config.LOW_VOLTAGE, self.low_voltage),  # FIXME
-            (lambda: self._control.ultrasonic.value <= 200, engine.TurnLeft(duration=2, justification=f'{self._control.ultrasonic.value=}mm > Avoiding obstacle.', **self.actions_kwargs)),
+            # (lambda: self._control.ultrasonic.value <= 200, engine.TurnLeft(duration=2, justification=f'{self._control.ultrasonic.value=}mm > Avoiding obstacle.', **self.actions_kwargs)),
             # TODO: lift, docking
         )
-        self.actions_kwargs = {'origin': self, 'priority': Priority.HIGH, 'same_actions_limit': 1, 'abort_previous': True}

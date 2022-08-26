@@ -3,7 +3,14 @@ from actuators.action import Action
 from actuators.actuator import Actuator
 
 from lib.utils import who_long
-from hw import HW
+
+
+try:
+    from robot_hat import Motor  # noqa
+    from robot_hat import Servo, PWM  # noqa
+except ModuleNotFoundError:
+    from fakes.motor import Motor
+    from fakes.servo import Servo, PWM
 
 
 class EngineAction(Action, ABC):
@@ -16,8 +23,8 @@ class EngineAction(Action, ABC):
         if actuator.is_different_action(self):  # execute the action, consume time, but perform change of engine configuration only when discontinuing previous action
             actuator.set_new_action(self)
             self.set(actuator)
-            HW.set_speed(actuator.speed)
-            HW.set_steering_angle(actuator.angle)
+            actuator.motors.wheel(speed=actuator.speed)
+            actuator.direction.angle(angle=actuator.angle)
 
     @abstractmethod
     def set(self, actuator: Actuator) -> None:
@@ -37,6 +44,8 @@ class Engine(Actuator):
         self.speed = 0
         self.angle = 0
         self.latest_action = None
+        self.motors = Motor()
+        self.direction = Servo(PWM('P2'))
 
     def set_new_action(self, action: Action):
         self.latest_action = action
