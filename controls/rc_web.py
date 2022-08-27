@@ -30,7 +30,7 @@ class Web(BaseHTTPRequestHandler):
         data = post_data.split('=', 1)[0]
 
         try:
-            self._control.perform_action(action=data, origin=self, **self.actions_kwargs)
+            self._control.perform_action(action=data, origin=self._control.rc, **self.actions_kwargs)
         except ValueError:
             try:
                 self._control.reverse_component_state(component=data)

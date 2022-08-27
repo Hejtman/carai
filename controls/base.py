@@ -64,7 +64,8 @@ class ControlBase(ComponentPeriod):
         [self.perform(action) for condition, action in self.conditional_actions if condition()]
 
     def perform(self, action) -> None:
-        self.performing_actions.append(action)
+        if action.origin == self:
+            self.performing_actions.append(action)
         any(actuator.put(action) for actuator in self._control.actuators)
 
     @property
