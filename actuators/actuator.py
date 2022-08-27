@@ -75,8 +75,14 @@ class Actuator(LoggingExceptionsThread):
         queued = len([same_action for same_action in self.action_queue.queue if same_action == action])
         return queued + 1 if action == self.current_action else queued
 
+    def reverse_activity(self):
+        super().reverse_activity()
+        if not self.current_action:
+            self.action_queue.put(NoneAction())
+
     @property
     def state(self) -> str:
         """ This method is called from outer thread. Variables might change asynchronously. """
-        actions = f'{self.current_action.justification} [{", ".join(who(a) for a in self.action_queue.queue)}]' if self.current_action else ''
-        return f'{super().state} {actions}'
+        current = f'{self.current_action.justification}' if self.current_action else ''
+        queued = f'[{", ".join(who(a) for a in self.action_queue.queue)}]' if self.action_queue.queue else ''
+        return f'{super().state} {current} {queued}'
