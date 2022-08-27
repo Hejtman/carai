@@ -11,6 +11,7 @@ class Component(ABC):
     def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
         self.last_exception = None
+        self.actions = {}   # component compatibility, some children use = all must have
 
     def iterate_wrapper(self):
         try:

@@ -4,6 +4,7 @@ from lib.threading2 import LoggingExceptionsThread
 from controls.base import Component
 from controls.rc_web import Web
 from config import Config
+from pathlib import Path
 
 
 class RC(Component, LoggingExceptionsThread):
@@ -24,5 +25,9 @@ class RC(Component, LoggingExceptionsThread):
         self.webServer.shutdown()
 
     def iterate(self):
-        self.webServer = HTTPServer(Config.RC_HTTP_SERVER, Web)
+        if Path.exists(Path('/home/pi')):
+            self.webServer = HTTPServer(Config.RC_HTTP_SERVER, Web)
+        else:
+            self.logger.info(f'Faking web server to {Config.LOCAL_RC_HTTP_SERVER}')
+            self.webServer = HTTPServer(Config.LOCAL_RC_HTTP_SERVER, Web)
         self.webServer.serve_forever()  # blocking, iterates only to log exceptions from HTTPServer = no iteration period set/expected

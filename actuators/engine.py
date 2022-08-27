@@ -6,7 +6,7 @@ from lib.utils import who_long
 
 
 try:
-    from robot_hat import Motor  # noqa
+    from robot_hat.motor import Motor  # noqa
     from robot_hat import Servo, PWM  # noqa
 except ModuleNotFoundError:
     from fakes.motor import Motor
@@ -46,6 +46,10 @@ class Engine(Actuator):
         self.latest_action = None
         self.motors = Motor()
         self.direction = Servo(PWM('P2'))
+        self.actions = {'◀️': TurnLeft,
+                        '▶': TurnRight,
+                        '▲': MoveStraight,
+                        '⏹': Stop}
 
     def set_new_action(self, action: Action):
         self.latest_action = action
@@ -62,7 +66,7 @@ class MoveStraight(EngineAction):
 
 class TurnLeft(EngineAction):
     def set(self, actuator: Engine) -> None:
-        actuator.angle = 10  # FIXME
+        actuator.angle = 10
 
 
 class TurnRight(EngineAction):

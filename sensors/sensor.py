@@ -36,7 +36,6 @@ class Sensor(ComponentPeriod, LoggingExceptionsThread, ABC):
         pass
 
     def process_raw_value(self, raw) -> None:
-        # FIXME: filter-out deviations
         if not self.values:
             self.values.append(raw)
         else:

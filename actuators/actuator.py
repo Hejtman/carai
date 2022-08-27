@@ -23,6 +23,7 @@ class Actuator(LoggingExceptionsThread):
         self.lock = Condition()                     # for locking action execution + waiting to complete the action duration (wait() can be interrupted from outside by notify() to abort action sooner)
         self.current_action = None                  # cross-thread shard driving variable used in critical sections
         self.accepts = accepts
+        self.actions = {}                           # component compatibility, some children use = all must have
 
     def put(self, action: Action, abort_current: bool = False) -> bool:
         """

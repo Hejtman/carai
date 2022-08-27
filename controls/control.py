@@ -6,7 +6,7 @@ from controls.control1 import Control1
 from controls.control2 import Control2
 from controls.rc import RC
 from lib.threading2 import LoggingExceptionsThread
-from lib.utils import who_long
+from lib.utils import who, who_long
 from sensors import battery, ultrasonic
 from config import Config
 
@@ -81,6 +81,24 @@ class Control(ControlBase):
         }[sensor]
         if action:
             self.perform(action)
+
+    def perform_action(self, action: str, **kwargs) -> None:
+        all_actions = (a for c in self.components for a in c.actions.values())
+        for a in all_actions:
+            if action == str(a):
+                self.perform(action=a(**kwargs))
+                return
+        raise ValueError(f'Unknown action: {action}')
+
+    def reverse_component_state(self, component: str) -> None:
+        for c in self.components:
+            if who(c) == component:
+                if c.is_alive():
+                    c.stop()  # FIXME: pause (thread can be started just once - rather from main thread)
+                else:
+                    c.run()  # FIXME: unpause (thread can be started just once - rather from main thread)
+                return
+        raise ValueError(f'Unknown component: {component}')
 
     def main_loop(self) -> None:
         with self:

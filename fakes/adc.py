@@ -8,8 +8,8 @@ class ADC(Fake):
 
     def read(self):
         self.logger.info(f'FAKE: ADC.read')
-        return -1
+        return 999999
 
     def read_voltage(self):
         self.logger.info(f'FAKE: ADC.read_voltage')
-        return -1
+        return 999999

@@ -2,9 +2,9 @@ from fakes.fake import Fake
 
 
 class TTS(Fake):
-    def __init__(self, engine='espeak', url=None):
+    def __init__(self, data):
         super().__init__()
-        assert engine in ['espeak', 'gtts', 'polly']
+        assert data['engine'] in ['espeak', 'gtts', 'polly']
 
     def _check_executable(self, executable):
         pass

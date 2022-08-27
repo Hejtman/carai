@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler
+from lib.utils import who
 
 
 class Web(BaseHTTPRequestHandler):
@@ -13,6 +14,7 @@ class Web(BaseHTTPRequestHandler):
       function mousedown(id) {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=PRESSED"); }}
       function mouseup(id)   {{ var xhr = new XMLHttpRequest(); xhr.open("POST", "", true); xhr.send(id+"=RELEASED"); }}
     </script>'''
+    actions_kwargs = {'duration': 1, 'priority': 1000, 'justification': 'Direct Web Action.', 'same_actions_limit': 5, 'abort_previous': True}
 
     def _send_headers(self):
         self.send_response(200)
@@ -25,7 +27,16 @@ class Web(BaseHTTPRequestHandler):
 
     def do_POST(self):
         post_data = self.rfile.read(int(self.headers.get('Content-Length'))).decode('utf-8')
-        print(post_data.split('=', 1))
+        data = post_data.split('=', 1)[0]
+
+        try:
+            self._control.perform_action(action=data, origin=self, **self.actions_kwargs)
+        except ValueError:
+            try:
+                self._control.reverse_component_state(component=data)
+            except ValueError:
+                self._control.rc.logger.error(f'{who(self)}: Do not know what this is about: {data}')
+
         self._send_headers()
         self.wfile.write(bytes(self.page, 'utf-8'))
 
@@ -38,7 +49,10 @@ class Web(BaseHTTPRequestHandler):
         return f'''
 <table>
 <tr><th colspan="2"><a href="{'COMPONENTS' if self.path == '/' else '/'}">COMPONENTS</a></th></tr>
-{''.join([f'<tr><td>{c.__class__.__name__}</td><td>{c.state}</td></tr>' for c in self._control.components])}
+{''.join([f'<tr>'
+          f'<td><input type="submit" id="{c.__class__.__name__}" onmousedown="mousedown(id)" value="{c.__class__.__name__}"/></td><td>{c.state}</td>' + 
+          "".join([f'<td><input type="submit" id="{value}" onmousedown="mousedown(id)" value="{key}"/></td>' for key, value in c.actions.items()]) + 
+          f'</tr>' for c in self._control.components])}
 <tr><td>{self._control.__class__.__name__}</td><td>{self._control.state}</td></tr>
 </table>'''
 

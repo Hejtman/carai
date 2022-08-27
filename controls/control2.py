@@ -5,7 +5,7 @@ from enum import Enum
 from controls.base import ControlBase
 from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who_long
-from actuators import repro, voice
+from actuators import repro, voice, engine
 from actuators.action import Priority, Result
 
 
@@ -38,11 +38,8 @@ class Control2(ControlBase, LoggingExceptionsThread):
     def iterate(self):
         super().iterate()
         if self._mood == Mood.INIT:
-            time.sleep(10)
-            self.perform(voice.SayHellow(duration=10, justification='Just to test voice.', **self.actions_kwargs))
-            time.sleep(10)
-            self.perform(repro.PlayX(duration=10, justification='Just to test playing some sound.', **self.actions_kwargs))
-            time.sleep(10)
+            self.perform(voice.SayAhoy(duration=1, justification='Just to test voice.', **self.actions_kwargs))
+            self.perform(engine.TurnRight(duration=1, justification='Just test.', **self.actions_kwargs))
             self._mood = Mood.IDLE
 
     @property

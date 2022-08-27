@@ -13,9 +13,7 @@ class Battery(Sensor):
 
     def _read_raw_value(self) -> float:
         self.logger.debug(f'Reading {who_long(self)}')
-        voltage = min(round(ADC('A4').read() / 4096.0 * 3.3 * 3, 2), 8.40)
-        value = round(max((voltage - 7.0) / 1.4, 0) * 100, 2)
-        return value
+        return round(ADC('A4').read() / 4096.0 * 3.3 * 3, 2)
 
     @property
     def state(self) -> str:
