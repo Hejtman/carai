@@ -4,7 +4,7 @@ from fakes.fake import Fake
 class Ultrasonic(Fake):
     def __init__(self, trig, echo, timeout=0.02):
         super().__init__()
-        self.logger.info(f'FAKE: Ultrasonic({trig=}, {echo=}, {timeout=})')
+        self.logger.info(f'FAKE: Ultrasonic(trig={trig}, echo={echo}, timeout={timeout})')
 
     def read(self, times=10):
         self.logger.info(f'FAKE: Ultrasonic.read')
@@ -14,13 +14,13 @@ class Ultrasonic(Fake):
 class Pin(Fake):
     def __init__(self, *value):
         super().__init__()
-        self.logger.info(f'FAKE: Pin({value=})')
+        self.logger.info(f'FAKE: Pin({value})')
 
     def __call__(self, value):
-        self.logger.info(f'FAKE: __call__({value=})')
+        self.logger.info(f'FAKE: __call__({value})')
 
     def value(self, *value):
-        self.logger.info(f'FAKE: value({value=})')
+        self.logger.info(f'FAKE: value({value})')
 
     def on(self):
         return self.value(1)
@@ -35,10 +35,10 @@ class Pin(Fake):
         return self.off()
 
     def mode(self, *value):
-        self.logger.info(f'FAKE: mode({value=})')
+        self.logger.info(f'FAKE: mode({value})')
 
     def irq(self, handler=None, trigger=None, bouncetime=200):
-        self.logger.info(f'FAKE: irq({handler=}, {trigger=}, {bouncetime=})')
+        self.logger.info(f'FAKE: irq(handler={handler}, trigger={trigger}, bouncetime={bouncetime})')
 
     def name(self):
         self.logger.info('FAKE: name')

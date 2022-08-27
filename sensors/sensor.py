@@ -44,4 +44,4 @@ class Sensor(ComponentPeriod, LoggingExceptionsThread, ABC):
 
     def stop(self):
         super().stop()
-        self.logger.debug(f'{who(self)}\n{self.raw_values=}\n{self.values}')
+        self.logger.debug(f'{who(self)}\nraw_values={self.raw_values}\nvalues={self.values}')

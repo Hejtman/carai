@@ -77,14 +77,11 @@ TODO: CONSOLE LOG
     @property
     def page(self) -> str:
         sub_page = self.path.rsplit('/', maxsplit=1)[-1]
-        match sub_page:
-            case '':
-                return self.home_page
-            case 'COMPONENTS':
-                return f'<html><head>{self.META}<title>COMPONENTS</title></head><body>{self.JS}{self.components}</body></html>'
-            case 'RC':
-                return f'<html><head>{self.CSS}{self.META}<title>RC</title></head><body>{self.JS}{self.rc}</body></html>'
-            case _:
-                return f'<html><head><title>ERROR</title></head><body>404 PAGE "{self.path}" NOT FOUND!</body></html>'
+        pages = {
+            '': self.home_page,
+            'COMPONENTS': f'<html><head>{self.META}<title>COMPONENTS</title></head><body>{self.JS}{self.components}</body></html>',
+            'RC': f'<html><head>{self.CSS}{self.META}<title>RC</title></head><body>{self.JS}{self.rc}</body></html>',
+        }
+        return pages.get(sub_page, f'<html><head><title>ERROR</title></head><body>404 PAGE "{self.path}" NOT FOUND!</body></html>')
 
 # TODO: buttons

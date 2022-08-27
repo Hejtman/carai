@@ -18,7 +18,7 @@ class EngineAction(Action, ABC):
         super().__init__(**kwargs)
 
     def execute(self, actuator) -> None:
-        self.logger.debug(f'{who_long(actuator)} -> {who_long(self)}: {actuator.speed=} {actuator.angle=}  {self.justification}')
+        self.logger.debug(f'{who_long(actuator)} -> {who_long(self)}: speed={actuator.speed} angle={actuator.angle}  {self.justification}')
 
         if actuator.is_different_action(self):  # execute the action, consume time, but perform change of engine configuration only when discontinuing previous action
             actuator.set_new_action(self)

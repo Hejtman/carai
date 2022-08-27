@@ -4,16 +4,16 @@ from fakes.fake import Fake
 class Servo(Fake):
     def __init__(self, pwm):
         super().__init__()
-        self.logger.info(f'FAKE: Servo({pwm=})')
+        self.logger.info(f'FAKE: Servo(pwm={pwm})')
 
     # angle ranges -90 to 90 degrees
     def angle(self, angle):
-        self.logger.info(f'FAKE: Servo({angle=})')
+        self.logger.info(f'FAKE: Servo(angle={angle})')
         assert -90 <= angle <= 90
 
     # pwm_value ranges MIN_PW 500 to MAX_PW 2500 degrees
     def set_pwm(self, pwm_value):
-        self.logger.info(f'FAKE: Servo({pwm_value=})')
+        self.logger.info(f'FAKE: Servo(pwm={pwm_value})')
         assert 500 <= pwm_value <= 2500
 
 

@@ -38,7 +38,7 @@ class Actuator(LoggingExceptionsThread):
             return False                                    # incompatible > try other actuator
 
         if action.same_actions_limit and self.count_same_actions(action) >= action.same_actions_limit:
-            self.logger.debug(f'{who(self)}: Refusing to put another: {action} as {action.same_actions_limit=} level reached.')
+            self.logger.debug(f'{who(self)}: Refusing to put another: {action} as actions_limit={action.same_actions_limit} level reached.')
             action.result = Result.DROPPED
             return True                                     # compatible but it does not meet its own condition to be queued for execution
 
