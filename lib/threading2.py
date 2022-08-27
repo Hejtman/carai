@@ -16,13 +16,18 @@ class LoggingExceptionsThread(Thread, ABC):
         self.logger = logging.getLogger(__name__)
         self.last_exception = None
         self.event_stop = Event()
+        self.event_active = Event()
+        self.event_active.set()
 
     def run(self):
         """ Thread's main loop. """
         self.logger.info(f'{who_long(self)} thread running.')
 
         while not self.event_stop.is_set():
-            self.iterate_wrapper()
+            if self.event_active.is_set():
+                self.iterate_wrapper()
+            else:
+                self.event_active.wait()
 
         self.logger.info(f'{who_long(self)} thread ended.')
 
@@ -40,9 +45,18 @@ class LoggingExceptionsThread(Thread, ABC):
 
     def stop(self):
         """ Allow the thread to gracefully finish by stopping calling iterate(). """
+        self.event_active.set()
         self.event_stop.set()
+
+    def reverse_activity(self):
+        if self.event_active.is_set():
+            self.event_active.clear()
+        else:
+            self.event_active.set()
 
     @property
     def state(self) -> str:
         """ This method is called from outer thread. Variables might change asynchronously. """
-        return f'💥{self.last_exception}' if self.last_exception else '❌' if self.event_stop.is_set() else '✅'
+        return f'💥{self.last_exception}' if self.last_exception else \
+            '❌' if self.event_stop.is_set() else \
+            '✅' if self.event_active.is_set() else '⏸️'

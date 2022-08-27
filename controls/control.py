@@ -93,10 +93,7 @@ class Control(ControlBase):
     def reverse_component_state(self, component: str) -> None:
         for c in self.components:
             if who(c) == component:
-                if c.is_alive():
-                    c.stop()  # FIXME: pause (thread can be started just once - rather from main thread)
-                else:
-                    c.run()  # FIXME: unpause (thread can be started just once - rather from main thread)
+                c.reverse_activity()
                 return
         raise ValueError(f'Unknown component: {component}')
 
