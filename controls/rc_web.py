@@ -7,7 +7,7 @@ class Web(BaseHTTPRequestHandler):
     # FIXME: suppress double-click behaviour
     CSS = '''<style>
     table { border: 1px solid black; }
-    tr, input {-webkit-user-select: none;}
+    tr {-webkit-user-select: none; }
     </style>'''
     META = '<meta http-equiv="refresh" content="10">'  # FIXME: reload only img from camera + status or iframe it on different page than RC keyboard!
     JS = '''<script>
@@ -45,13 +45,13 @@ class Web(BaseHTTPRequestHandler):
 
     @property
     def components(self) -> str:
-        # TODO: turn on/off component
         return f'''
 <table>
 <tr><th colspan="2"><a href="{'COMPONENTS' if self.path == '/' else '/'}">COMPONENTS</a></th></tr>
 {''.join([f'<tr>'
-          f'<td><input type="submit" id="{c.__class__.__name__}" onmousedown="mousedown(id)" value="{c.__class__.__name__}"/></td><td>{c.state}</td>' + 
-          "".join([f'<td><input type="submit" id="{value}" onmousedown="mousedown(id)" value="{key}"/></td>' for key, value in c.actions.items()]) + 
+          f'<td><div type="button" id="{c.__class__.__name__}" onmousedown="mousedown(id)">{c.__class__.__name__}</div></td>'
+          f'<td><div type="button" id="{c.__class__.__name__}" onmousedown="mousedown(id)">{c.state}</div></td>' +
+          "".join([f'<td><input type="submit" id="{value}" onmousedown="mousedown(id)" value="{key}"/></td>' for key, value in c.actions.items()]) +
           f'</tr>' for c in self._control.components])}
 <tr><td>{self._control.__class__.__name__}</td><td>{self._control.state}</td></tr>
 </table>'''

@@ -83,6 +83,6 @@ class Actuator(LoggingExceptionsThread):
     @property
     def state(self) -> str:
         """ This method is called from outer thread. Variables might change asynchronously. """
-        current = f'{self.current_action.justification}' if self.current_action else ''
+        current = f'{who(self.current_action)} ({self.current_action.justification})' if self.current_action else ''
         queued = f'[{", ".join(who(a) for a in self.action_queue.queue)}]' if self.action_queue.queue else ''
         return f'{super().state} {current} {queued}'
