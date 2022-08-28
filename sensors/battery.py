@@ -15,6 +15,17 @@ class Battery(Sensor):
         self.logger.debug(f'Reading {who_long(self)}')
         return round(ADC('A4').read() / 4096.0 * 3.3 * 3, 2)
 
+    def process_raw_value(self, raw) -> None:
+        if raw <= 0:
+            raw = 9999
+
+        # FIXME: filter-out deviations
+        if not self.values:
+            self.values.append(raw)
+        else:
+            self.values[0] = raw
+
+
     @property
     def state(self) -> str:
         return f'{super().state} {self.value}V'
