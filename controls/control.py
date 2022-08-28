@@ -7,7 +7,7 @@ from controls.control2 import Control2
 from controls.rc import RC
 from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who, who_long
-from sensors import battery, ultrasonic
+from sensors import battery, ultrasonic, temperatures
 from config import Config
 
 """
@@ -44,6 +44,7 @@ class Control(ControlBase):
         # sensors - prerequisite for producing actions - start second
         self.battery = battery.Battery(samples=10, period=10, control=self)
         self.ultrasonic = ultrasonic.Ultrasonic(samples=10, period=0.1, control=self)
+        self.cpu_temp = temperatures.CPU(samples=10, period=10, control=self)
         # TODO: CPUs load
         # TODO: CPU/APU temperatures
         # TODO: ds18x20 temperature
@@ -57,7 +58,7 @@ class Control(ControlBase):
         # all above
         self.components = [c for c in self.__dict__.values() if isinstance(c, LoggingExceptionsThread)]
         self.actuators = [c for c in self.__dict__.values() if isinstance(c, Actuator)]
-        assert len(self.components) == 9
+        assert len(self.components) == 10
         assert len(self.actuators) == 4
 
         self.actions_kwargs = {'origin': self, 'priority': Priority.EMERGENCY, 'same_actions_limit': 1, 'abort_previous': True}
@@ -78,7 +79,7 @@ class Control(ControlBase):
         action = {
             self.battery: terminal.ShutDown(duration=5, justification=f'Shutting down the system to prevent battery damage: {sensor.value} V.', **self.actions_kwargs) if sensor.value <= Config.VERY_LOW_VOLTAGE else None,
             self.ultrasonic: engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} cm.', **self.actions_kwargs) if sensor.value <= 3 else None,
-        }[sensor]
+        }.get(sensor, None)
         if action:
             self.perform(action)
 
