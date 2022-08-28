@@ -21,4 +21,4 @@ class Ultrasonic(Sensor):
 
     @property
     def state(self) -> str:
-        return f'{super().state} {self.value}mm'
+        return f'{super().state} {self.value}cm'

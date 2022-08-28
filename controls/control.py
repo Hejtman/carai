@@ -77,7 +77,7 @@ class Control(ControlBase):
         self.logger.debug(f'{who_long(self)} processing: {who_long(sensor)}: {sensor.value}')
         action = {
             self.battery: terminal.ShutDown(duration=5, justification=f'Shutting down the system to prevent battery damage: {sensor.value} V.', **self.actions_kwargs) if sensor.value <= Config.VERY_LOW_VOLTAGE else None,
-            self.ultrasonic: engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} mm.', **self.actions_kwargs) if sensor.value <= 30 else None,
+            self.ultrasonic: engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} cm.', **self.actions_kwargs) if sensor.value <= 3 else None,
         }[sensor]
         if action:
             self.perform(action)

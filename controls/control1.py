@@ -14,6 +14,6 @@ class Control1(ControlBase, LoggingExceptionsThread):
 
         self.conditional_actions = (
             (lambda: self._control.battery.value <= Config.LOW_VOLTAGE, voice.SayLowBattery(duration=10, justification='Low battery!', **self.actions_kwargs)),
-            (lambda: self._control.ultrasonic.value <= 200, engine.TurnLeft(duration=2, justification='Avoiding obstacle!', **self.actions_kwargs)),
+            (lambda: self._control.ultrasonic.value <= 50, engine.TurnLeft(duration=2, justification='Avoiding obstacle!', **self.actions_kwargs)),
             # TODO: lift, docking
         )

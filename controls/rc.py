@@ -1,11 +1,12 @@
+import time
 from http.server import HTTPServer
-from threading import Thread
 
 from lib.threading2 import LoggingExceptionsThread
 from controls.base import ControlBase
 from controls.rc_web import Web
 from config import Config
 from pathlib import Path
+from lib.utils import who
 
 
 class RC(ControlBase, LoggingExceptionsThread):
@@ -18,32 +19,41 @@ class RC(ControlBase, LoggingExceptionsThread):
         super().__init__(period=10, control=control)
         LoggingExceptionsThread.__init__(self)
         Web._control = self._control
-        self.web_server = None
+        self.components = [
+            WebServer(Config.RC_HTTP_SERVER),
+            WebServer(Config.ETH0_RC_HTTP_SERVER)
+        ] if Path.exists(Path('/home/pi')) else [
+            WebServer(Config.LOCAL_RC_HTTP_SERVER)  # local dev fake
+        ]
 
     def stop(self):
-        self.web_server.stop()
         super().stop()
+        [c.stop() for c in self.components]
 
     def iterate(self):
-        if not (self.web_server and self.web_server.is_alive()):
-            web_server = WebServer()
-            web_server.start()
-            self.web_server = web_server
+        [c.start() for c in self.components if not c.is_alive()]
+        if self.last_exception:
+            self.last_exception = None  # no exception raised in this iteration > all set
 
     @property
     def state(self) -> str:
-        return f'{super().state}' if self.web_server and self.web_server.is_alive() else '❌'
+        return f'{super().state}{"".join([c.state for c in self.components])}'
 
 
-class WebServer(Thread):
-    def __init__(self):
+class WebServer(LoggingExceptionsThread):
+    def __init__(self, address: tuple) -> None:
         super().__init__()
-        self.web_server = HTTPServer(Config.RC_HTTP_SERVER if Path.exists(Path('/home/pi')) else
-                                     Config.LOCAL_RC_HTTP_SERVER, Web)
+        self.address = address
+        self.web_server = None
 
-    def run(self):
+    def iterate(self):
+        time.sleep(3)  # network start delay +retry delay (when exception raised below)
+        self.logger.info(f'{who(self)} starting at: {self.address}')
+        self.web_server = HTTPServer(self.address, Web)
         self.web_server.serve_forever()  # blocking
 
     def stop(self):
-        self.web_server.server_close()
-        self.web_server.shutdown()
+        super().stop()
+        if self.web_server:
+            self.web_server.server_close()
+            self.web_server.shutdown()

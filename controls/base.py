@@ -1,5 +1,6 @@
 import logging
 import time
+from threading import Event
 from datetime import timedelta
 from abc import ABC, abstractmethod
 
@@ -35,11 +36,13 @@ class ComponentPeriod(Component, ABC):
         super().__init__()
         self.period = period
         self.iteration_time: float = 0
+        self.event_active = Event()
+        self.event_active.set()
 
     def iterate_wrapper(self):
         self.iteration_time = time.time()
         super().iterate_wrapper()
-        time.sleep(time2next(self.period, self.iteration_time))
+        self.event_active.wait(timeout=time2next(self.period, self.iteration_time))
 
     @property
     def state(self) -> str:
