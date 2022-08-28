@@ -25,14 +25,14 @@ class RC(ControlBase, LoggingExceptionsThread):
         super().stop()
 
     def iterate(self):
-        if not self.web_server:
+        if not (self.web_server and self.web_server.is_alive()):
             web_server = WebServer()
             web_server.start()
             self.web_server = web_server
 
     @property
     def state(self) -> str:
-        return f'{super().state}' if self.web_server.is_alive() else '❌'
+        return f'{super().state}' if self.web_server and self.web_server.is_alive() else '❌'
 
 
 class WebServer(Thread):
