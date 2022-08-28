@@ -13,10 +13,13 @@ class Sensor(ComponentPeriod, LoggingExceptionsThread, ABC):
          ** process data = create some (likely EMERGENCY priority) actions for actuators
          * on demand give the latest (processed) sensor value
     """
-    def __init__(self, samples: int, period: float, control) -> None:
+    def __init__(self, samples: int, period: float, control, minimum, maximum, invalid) -> None:
         ComponentPeriod.__init__(self, period)
         LoggingExceptionsThread.__init__(self)
         self._control = control
+        self.maximum = maximum
+        self.minimum = minimum
+        self.invalid = invalid
         self.raw_values = []  # FIXME: samples size of the window
         self.values = []  # FIXME: samples size of the window
 
@@ -32,10 +35,14 @@ class Sensor(ComponentPeriod, LoggingExceptionsThread, ABC):
         self._control.process_data(self)  # FIXME: only if value is valid?
 
     @abstractmethod
-    def _read_raw_value(self) -> None:
+    def _read_raw_value(self) -> float:
         pass
 
     def process_raw_value(self, raw) -> None:
+        if raw < self.minimum or raw > self.maximum:
+            raw = self.invalid
+
+        # FIXME: filter-out deviations
         if not self.values:
             self.values.append(raw)
         else:
