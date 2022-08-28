@@ -86,7 +86,7 @@ class Control(ControlBase):
         all_actions = (a for c in self.components for a in c.actions.values())
         for a in all_actions:
             if action == str(a):
-                self.perform(action=a(**kwargs))
+                kwargs['origin'].perform(action=a(**kwargs))    # origin control is responsible for creating this action
                 return
         raise ValueError(f'Unknown action: {action}')
 
