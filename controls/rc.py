@@ -45,12 +45,14 @@ class WebServer(LoggingExceptionsThread):
         super().__init__()
         self.address = address
         self.web_server = None
+        self.retry_delay = 0
 
     def iterate(self):
-        time.sleep(3)  # network start delay +retry delay (when exception raised below)
+        time.sleep(self.retry_delay)
+        self.retry_delay = 2*self.retry_delay + 1
         self.logger.info(f'{who(self)} starting at: {self.address}')
         self.web_server = HTTPServer(self.address, Web)
-        self.web_server.serve_forever()  # blocking
+        self.web_server.serve_forever()  # blocking, throwing exceptions > logged, retry by next iteration
 
     def stop(self):
         super().stop()

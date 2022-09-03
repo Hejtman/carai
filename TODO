@@ -1,5 +1,8 @@
+TODO: camera, ... https://gpiozero.readthedocs.io/en/stable/recipes.html
+
 https://refactoring.guru/design-patterns/observer/python/example
 
+TODO: pi_data disk, memory, CPU usage: https://amalgjose.com/2020/04/27/simple-python-program-to-get-the-system-status-of-a-raspberry-pi/
 TODO: daemonize
 TODO: fix unittest
 TODO: neo cortex action vs method vs mood

@@ -7,7 +7,7 @@ from controls.control2 import Control2
 from controls.rc import RC
 from lib.threading2 import LoggingExceptionsThread
 from lib.utils import who, who_long
-from sensors import battery, ultrasonic, temperatures
+from sensors import battery, ultrasonic, psutil2
 from config import Config
 
 """
@@ -42,9 +42,9 @@ class Control(ControlBase):
         self.voice = voice.Voice()
 
         # sensors - prerequisite for producing actions - start second
-        self.battery = battery.Battery(samples=10, period=10, control=self)
-        self.ultrasonic = ultrasonic.Ultrasonic(samples=10, period=0.1, control=self)
-        self.cpu_temp = temperatures.CPU(samples=10, period=10, control=self)
+        self.battery = battery.Battery(period=10, control=self)
+        self.ultrasonic = ultrasonic.Ultrasonic(period=0.5, control=self)
+        self.psutil2 = psutil2.PsUtil(period=10)
         # TODO: CPUs load
         # TODO: CPU/APU temperatures
         # TODO: ds18x20 temperature
