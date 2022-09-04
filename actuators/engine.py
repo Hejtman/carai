@@ -3,13 +3,11 @@ from actuators.action import Action
 from actuators.actuator import Actuator
 
 from lib.utils import who_long
-
+from hw.motor2 import Motor
 
 try:
-    from robot_hat.motor import Motor  # noqa
     from robot_hat import Servo, PWM  # noqa
 except ModuleNotFoundError:
-    from fakes.motor import Motor
     from fakes.servo import Servo, PWM
 
 
@@ -37,7 +35,7 @@ class Engine(Actuator):
         * Two motors + steering servo togather participate on the moving action.
         * All motor actions are performed exclusively on the same thread to ensure serialisation / prioritisation.
     """
-    default_speed = 0.1  # FIXME
+    default_speed = 1  # FIXME
 
     def __init__(self) -> None:
         super().__init__(accepts=EngineAction)

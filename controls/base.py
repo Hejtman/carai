@@ -36,17 +36,17 @@ class ComponentPeriod(Component, ABC):
         super().__init__()
         self.period = period
         self.iteration_time: float = 0
-        self.event_pause = Event()
+        self.event_stop = Event()
 
     def iterate_wrapper(self):
         self.iteration_time = time.time()
         super().iterate_wrapper()
-        self.event_pause.wait(time2next(self.period, self.iteration_time))
+        self.event_stop.wait(time2next(self.period, self.iteration_time))
 
     @property
     def state(self) -> str:
         return f'{super().state}' if time2next(self.period, self.iteration_time) \
-            else f'⌛ {time.time()-self.iteration_time}' if time.time()-self.iteration_time < timedelta(hours=1).total_seconds() \
+            else f'⌛ {round(time.time()-self.iteration_time,1)}s' if time.time()-self.iteration_time < timedelta(hours=1).total_seconds() \
             else '💀'
 
 

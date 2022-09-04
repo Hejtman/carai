@@ -1,8 +1,8 @@
-import datetime
-import psutil
-
 from sensors.sensor import Sensor
 from lib.utils import who_long
+
+
+import psutil
 
 
 class PsUtil(Sensor):
@@ -11,18 +11,13 @@ class PsUtil(Sensor):
         self.psutil_process = psutil.Process()
 
     def read_raw_value(self) -> str:
-        self.logger.debug(f'Reading {who_long(self)}')
+        with self.psutil_process.oneshot():
+            proces = f'{self.psutil_process.num_threads()}t {int(self.psutil_process.cpu_percent())}%'
+        cpu1 = f'{int(psutil.cpu_percent(interval=None))}% '
+        cpu2 = f'{int(psutil.cpu_freq(percpu=False).current)}GHz '\
+               f'{int(psutil.sensors_temperatures().get("cpu_thermal")[0].current)}℃'
+        memory = f'RAM:{int(psutil.virtual_memory().percent)}% '\
+                 f'SD:{int(psutil.disk_usage("/").percent)}%'
 
-        start = datetime.datetime.now()
-#        with self.psutil_process.oneshot():  # FIXME: expensive diagnostic
-#            proces = f'{self.psutil_process.cpu_percent()}% {1+len(self.psutil_process.children())}p{self.psutil_process.num_threads()}t {round(self.psutil_process.memory_percent(), 1)}%'
-#            proces_extra = f'{self.psutil_process.pid}: {self.psutil_process.children()}'
-        cpu = f'{psutil.cpu_percent(interval=None)}% {psutil.cpu_freq(percpu=False).current} {psutil.sensors_temperatures().get("cpu_thermal")[0].current}℃'
-        memory = f'RAM:{psutil.virtual_memory().percent}% SD:{psutil.disk_usage("/").percent}'
-        boot_time = f'{datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%d %H:%M")}'
-
-        return f'cpu {cpu}\nmemory {memory}\n{boot_time}'
-        value = f'{proces}\ncpu {cpu}\nmemory {memory}\n{boot_time}'
-
-        self.logger.debug(f'{who_long(self)}: {proces_extra} {value}')
-        return value
+        self.logger.debug(f'{who_long(self)}: {proces} {cpu1} {cpu2} {memory}')
+        return f'{proces} {cpu1}<td colspan="100%">{cpu2} {memory}</td>'

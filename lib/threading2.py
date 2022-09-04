@@ -23,10 +23,9 @@ class LoggingExceptionsThread(Thread, ABC):
         self.logger.info(f'{who_long(self)} thread running.')
 
         while not self.event_stop.is_set():
-            if not self.event_pause.is_set():
+            while not self.event_pause.is_set():
                 self.iterate_wrapper()
-            else:
-                self.event_pause.wait()
+            self.event_stop.wait(timeout=1)
 
         self.logger.info(f'{who_long(self)} thread ended.')
 
