@@ -38,3 +38,8 @@ class PWM:
 
     def pulse_width_percent(self, *pulse_width_percent):
         pass
+
+
+class Pin(PWM):
+    def value(self, _):
+        pass
