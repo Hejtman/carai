@@ -14,6 +14,11 @@ class Control1(ControlBase, LoggingExceptionsThread):
 
         self.conditional_actions = (
             (lambda: self._control.battery.value and self._control.battery.value <= Config.LOW_VOLTAGE, voice.SayLowBattery(duration=10, justification='Low battery!', **self.actions_kwargs)),
-            (lambda: self._control.ultrasonic.value and self._control.ultrasonic.value <= 50, engine.TurnLeft(duration=2, justification='Avoiding obstacle!', **self.actions_kwargs)),
+            (lambda: self._control.ultrasonic.value and self._control.ultrasonic.value <= 40, self.avoid_obstacle)
             # TODO: lift, docking
         )
+
+    def avoid_obstacle(self):
+        if self._control.engine.angle == 0 and self._control.engine.speed:
+            self.perform(engine.TurnLeft(duration=3, justification='Avoiding obstacle!', **self.actions_kwargs))  # FIXME: divide by speed
+            self.perform(engine.TurnCenter(duration=0, justification='Avoiding obstacle!', **self.actions_kwargs))

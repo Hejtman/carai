@@ -35,7 +35,7 @@ class Engine(Actuator):
         * Two motors + steering servo togather participate on the moving action.
         * All motor actions are performed exclusively on the same thread to ensure serialisation / prioritisation.
     """
-    default_speed = 1  # FIXME
+    default_speed = 20
 
     def __init__(self) -> None:
         super().__init__(accepts=EngineAction)
@@ -45,8 +45,10 @@ class Engine(Actuator):
         self.motors = Motor()
         self.direction = Servo(PWM('P2'))
         self.actions = {'◀️': TurnLeft,
+                        '↔': TurnCenter,
                         '▶': TurnRight,
                         '▲': MoveStraight,
+                        '▼': MoveBackwards,
                         '⏹': Stop}
 
     def set_new_action(self, action: Action):
@@ -54,6 +56,11 @@ class Engine(Actuator):
 
     def is_different_action(self, action: Action):
         return self.latest_action != action
+
+
+class TurnCenter(EngineAction):
+    def set(self, actuator: Engine) -> None:
+        actuator.angle = 0
 
 
 class MoveStraight(EngineAction):
@@ -64,14 +71,19 @@ class MoveStraight(EngineAction):
 
 class TurnLeft(EngineAction):
     def set(self, actuator: Engine) -> None:
-        actuator.angle = 10
+        actuator.angle = -30
 
 
 class TurnRight(EngineAction):
     def set(self, actuator: Engine) -> None:
-        actuator.angle = 10  # FIXME
+        actuator.angle = 30
 
 
 class Stop(EngineAction):
     def set(self, actuator: Engine) -> None:
         actuator.speed = 0
+
+
+class MoveBackwards(EngineAction):
+    def set(self, actuator: Engine) -> None:
+        actuator.speed = -Engine.default_speed

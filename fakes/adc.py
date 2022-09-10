@@ -8,4 +8,4 @@ class ADC(Fake):
 
     def read(self):
         self.logger.info(f'FAKE: ADC.read')
-        return 99999999
+        return None

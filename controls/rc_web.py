@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler
 from lib.utils import who
 
 
+# TODO: key-strokes
 class Web(BaseHTTPRequestHandler):
     _control = None  # set externally before instantiation
     # FIXME: suppress double-click behaviour
@@ -61,17 +62,17 @@ class Web(BaseHTTPRequestHandler):
         return f'''
 <table>
   <tr><th colspan="7"><a href="{'RC' if self.path == '/' else '/'}">RC</a></th></tr>
-  <tr><td><input type='submit' id="MOVE_FORWARD"  onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▲"/></td>
-      <td>                                                                                                       </td>
-      <td><input type='submit' id="MOVE_FORWARD"  onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▲"/></td></tr>
+  <tr><td><input type='submit' id="MoveStraight"  onmousedown="mousedown(id)" value="▲"/></td>
+      <td><input type='submit' id="TurnCenter"    onmousedown="mousedown(id)" value="↔"/></td>
+      <td><input type='submit' id="MoveStraight"  onmousedown="mousedown(id)" value="▲"/></td></tr>
 
-  <tr><td><input type='submit' id="MOVE_LEFT"     onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="◀"/></td>
-      <td><input type='submit' id="MOVE_STOP"     onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="⏹"/></td>
-      <td><input type='submit' id="MOVE_RIGHT"    onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▶"/></td></tr>
+  <tr><td><input type='submit' id="TurnLeft"      onmousedown="mousedown(id)" value="◀"/></td>
+      <td><input type='submit' id="Stop"          onmousedown="mousedown(id)" value="⏹"/></td>
+      <td><input type='submit' id="TurnRight"     onmousedown="mousedown(id)" value="▶"/></td></tr>
 
-  <tr><td><input type='submit' id="MOVE_BACKWARD" onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▼"/></td>
-      <td>                                                                                                       </td>
-      <td><input type='submit' id="MOVE_BACKWARD" onmousedown="mousedown(id)" onmouseup="mouseup(id)" value="▼"/></td></tr>
+  <tr><td><input type='submit' id="MoveBackwards" onmousedown="mousedown(id)" value="▼"/></td>
+      <td><input type='submit' id="TurnCenter"    onmousedown="mousedown(id)" value="↔"/></td>
+      <td><input type='submit' id="MoveBackwards" onmousedown="mousedown(id)" value="▼"/></td></tr>
 </table>
 '''
 

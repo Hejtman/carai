@@ -66,9 +66,13 @@ class ControlBase(ComponentPeriod):
         [self.perform(action) for condition, action in self.conditional_actions if condition()]
 
     def perform(self, action) -> None:
-        if action.origin == self:
-            self.performing_actions.append(action)
-        any(actuator.put(action) for actuator in self._control.actuators)
+        try:
+            action()
+        except TypeError:
+            if action.origin == self:
+                self.performing_actions.append(action)
+            if not any(actuator.put(action) for actuator in self._control.actuators):
+                raise ValueError(f'Unknown action: {action}')
 
     @property
     def state(self) -> str:

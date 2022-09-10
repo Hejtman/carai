@@ -39,7 +39,7 @@ class Control2(ControlBase, LoggingExceptionsThread):
         super().iterate()
         if self._mood == Mood.INIT:
             self.perform(voice.SayAhoy(duration=1, justification='Just to test voice.', **self.actions_kwargs))
-            self.perform(engine.TurnRight(duration=1, justification='Just test.', **self.actions_kwargs))
+            self.perform(engine.TurnCenter(duration=0.1, justification='Just test.', **self.actions_kwargs))
             self._mood = Mood.IDLE
 
     @property

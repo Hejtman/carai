@@ -35,11 +35,11 @@ class Control(ControlBase):
     def __init__(self) -> None:
         super().__init__(period=1, control=self)
 
-        # actuators - processing actions - starts first
-        self.terminal = terminal.Terminal()
+        # actuators - processing actions - starts first - sorted by expected frequency of actions
         self.engine = engine.Engine()
         self.repro = repro.Repro()
         self.voice = voice.Voice()
+        self.terminal = terminal.Terminal()
 
         # sensors - prerequisite for producing actions - start second
         self.battery = battery.Battery(period=10, control=self)
@@ -77,8 +77,8 @@ class Control(ControlBase):
         """ This method gets called asynchronously from each sensor thread. """
         self.logger.debug(f'{who_long(self)} processing: {who_long(sensor)}: {sensor.value}')
         action = {
-            self.battery: terminal.ShutDown(duration=5, justification=f'Shutting down the system to prevent battery damage: {sensor.value} V.', **self.actions_kwargs) if sensor.value <= Config.VERY_LOW_VOLTAGE else None,
-            self.ultrasonic: engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} cm.', **self.actions_kwargs) if sensor.value <= 3 else None,
+            self.battery: terminal.ShutDown(duration=5, justification=f'Shutting down to save battery: {sensor.value} V.', **self.actions_kwargs) if sensor.value <= Config.VERY_LOW_VOLTAGE else None,
+            self.ultrasonic: engine.Stop(duration=2, justification=f'Freezing car movement for 2s to not hit an obstacle: {sensor.value} cm.', **self.actions_kwargs) if sensor.value <= 4 else None,
         }.get(sensor, None)
         if action:
             self.perform(action)
@@ -86,7 +86,8 @@ class Control(ControlBase):
     def perform_action(self, action: str, **kwargs) -> None:
         all_actions = (a for c in self.components for a in c.actions.values())
         for a in all_actions:
-            if action == str(a):
+            self.logger.debug(f'{a.__name__} in {action} ?')
+            if a.__name__ == action or f'.{a.__name__}' in action:
                 kwargs['origin'].perform(action=a(**kwargs))    # origin control is responsible for creating this action
                 return
         raise ValueError(f'Unknown action: {action}')

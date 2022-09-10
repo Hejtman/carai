@@ -12,7 +12,6 @@ class Motor:
     PRE_SCALER = 10
 
     def __init__(self):
-
         self.left_rear_pwm_pin = PWM('P13')
         self.right_rear_pwm_pin = PWM('P12')
         self.left_rear_dir_pin = Pin('D4')
@@ -28,19 +27,10 @@ class Motor:
         direction = bool(speed > 0)
         speed = abs(speed)
 
-        if speed:
-            speed = int(speed / 2) + 50
-
-        if motor == 0:
+        if motor in (0, -1):
             self.left_rear_dir_pin.value(not direction)  # is only my HW wired this way?
             self.left_rear_pwm_pin.pulse_width_percent(speed)
 
-        elif motor == 1:
-            self.right_rear_dir_pin.value(direction)
-            self.right_rear_pwm_pin.pulse_width_percent(speed)
-
-        elif motor == -1:
-            self.left_rear_dir_pin.value(not direction)  # is only my HW wired this way?
-            self.left_rear_pwm_pin.pulse_width_percent(speed)
+        if motor in (1, -1):
             self.right_rear_dir_pin.value(direction)
             self.right_rear_pwm_pin.pulse_width_percent(speed)

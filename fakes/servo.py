@@ -43,3 +43,9 @@ class PWM:
 class Pin(PWM):
     def value(self, _):
         pass
+
+    def on(self):
+        pass
+
+    def off(self):
+        pass

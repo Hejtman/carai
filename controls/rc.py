@@ -48,7 +48,7 @@ class WebServer(LoggingExceptionsThread):
         self.retry_delay = 0
 
     def iterate(self):
-        time.sleep(self.retry_delay)
+        self.event_stop.wait(self.retry_delay)
         self.retry_delay = 2*self.retry_delay + 1
         self.logger.info(f'{who(self)} starting at: {self.address}')
         self.web_server = HTTPServer(self.address, Web)
